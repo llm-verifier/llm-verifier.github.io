@@ -1,0 +1,74 @@
+---
+layout: default
+title: Medical Annotation Tool
+---
+
+<h1>Medical Annotation Tool</h1>
+
+<div id="annotation-container">
+  <h2>Medical Problem</h2>
+  <p id="medical-problem"></p>
+  
+  <h2>LLM Reasoning</h2>
+  <div id="llm-reasoning" contenteditable="true"></div>
+  
+  <button onclick="handleStrikethrough()">Strikethrough</button>
+  <button onclick="handleComment()">Add Comment</button>
+  <button onclick="handleSave()">Save Annotations</button>
+</div>
+
+<script>
+  // Sample data (in a real scenario, this would come from a backend)
+  const problem = "Patient presents with persistent cough and fever.";
+  const llmReasoning = "Based on the symptoms, this could be a case of acute bronchitis or possibly early-stage pneumonia. Further tests are recommended.";
+
+  // Populate the content
+  document.getElementById('medical-problem').textContent = problem;
+  document.getElementById('llm-reasoning').textContent = llmReasoning;
+
+  function handleStrikethrough() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const span = document.createElement('span');
+    span.style.textDecoration = 'line-through';
+    range.surroundContents(span);
+  }
+
+  function handleComment() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const comment = prompt("Enter your comment:");
+    if (comment) {
+      const span = document.createElement('span');
+      span.style.backgroundColor = 'yellow';
+      span.title = comment;
+      range.surroundContents(span);
+    }
+  }
+
+  function handleSave() {
+    const annotations = document.getElementById('llm-reasoning').innerHTML;
+    console.log("Annotations saved:", annotations);
+    // In a real scenario, you'd send this data to a server
+    alert("Annotations saved!");
+  }
+</script>
+
+<style>
+  #annotation-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  #llm-reasoning {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  button {
+    margin-right: 10px;
+  }
+</style>
