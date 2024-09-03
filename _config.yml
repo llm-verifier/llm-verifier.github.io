@@ -1,0 +1,45 @@
+# Site settings
+title: Medical Annotation Tool
+description: A tool for doctors to annotate LLM reasoning on medical problems
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "" # the base hostname & protocol for your site, e.g. http://example.com
+
+# Build settings
+markdown: kramdown
+theme: minima
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+
+# Include the annotation tool page
+include:
+  - annotation-tool.html
+
+# Plugins
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+# Default layout for pages
+defaults:
+  -
+    scope:
+      path: ""
+      type: "pages"
+    values:
+      layout: "default"
+
+# Navigation
+header_pages:
+  - about.md
+  - annotation-tool.html
+
+# Google Analytics
+google_analytics: # Your Google Analytics tracking ID here
