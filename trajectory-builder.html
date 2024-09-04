@@ -10,7 +10,6 @@ title: Medical Decision Trajectory Builder
 <div id="trajectory-builder-container">
   <div id="toolbox">
     <button onclick="addBlock()">Add Decision Block</button>
-    <button onclick="addArrow()">Add Arrow</button>
     <button onclick="saveTrajectory()">Save Trajectory</button>
   </div>
   <div id="canvas">
@@ -19,26 +18,109 @@ title: Medical Decision Trajectory Builder
 </div>
 
 <script>
+  let blockCounter = 0;
+
+  // Function to add a block
   function addBlock() {
+    blockCounter++;
     const block = document.createElement('div');
     block.classList.add('block');
+    block.id = `block-${blockCounter}`;
     block.contentEditable = true;
     block.textContent = "Decision Block";
+    block.style.left = '100px';
+    block.style.top = `${50 * blockCounter}px`;
+    
+    // Make the block draggable
+    makeDraggable(block);
+    
     document.getElementById('canvas').appendChild(block);
   }
 
-  function addArrow() {
-    const arrow = document.createElement('div');
-    arrow.classList.add('arrow');
-    arrow.textContent = "→";
-    document.getElementById('canvas').appendChild(arrow);
+  // Make a block draggable and add arrow handling
+  function makeDraggable(block) {
+    block.draggable = true;
+    
+    block.addEventListener('dragstart', dragStart);
+    block.addEventListener('dragend', dragEnd);
+    block.addEventListener('dblclick', addArrow);
   }
 
+  function dragStart(e) {
+    e.dataTransfer.setData('text', e.target.id);
+    setTimeout(() => (e.target.style.opacity = "0.5"), 0);
+  }
+
+  function dragEnd(e) {
+    e.target.style.opacity = "1";
+    const rect = e.target.getBoundingClientRect();
+    e.target.style.left = `${rect.left}px`;
+    e.target.style.top = `${rect.top}px`;
+    createArrows(e.target);
+  }
+
+  // Add arrow automatically when double-clicking a block
+  function addArrow(e) {
+    const newArrow = document.createElement('div');
+    newArrow.classList.add('arrow');
+    newArrow.textContent = "→";
+    
+    document.getElementById('canvas').appendChild(newArrow);
+
+    const rect = e.target.getBoundingClientRect();
+    const arrowX = rect.right;
+    const arrowY = rect.top + rect.height / 2;
+
+    newArrow.style.left = `${arrowX + 10}px`;
+    newArrow.style.top = `${arrowY}px`;
+  }
+
+  function createArrows(block) {
+    // Automatically create arrows between blocks based on positioning
+    const blocks = document.querySelectorAll('.block');
+    blocks.forEach(targetBlock => {
+      if (block !== targetBlock) {
+        const sourceRect = block.getBoundingClientRect();
+        const targetRect = targetBlock.getBoundingClientRect();
+        
+        if (sourceRect.right < targetRect.left && Math.abs(sourceRect.top - targetRect.top) < 50) {
+          const newArrow = document.createElement('div');
+          newArrow.classList.add('arrow');
+          newArrow.textContent = "→";
+
+          const arrowX = sourceRect.right;
+          const arrowY = sourceRect.top + sourceRect.height / 2;
+
+          newArrow.style.left = `${arrowX + 10}px`;
+          newArrow.style.top = `${arrowY}px`;
+
+          document.getElementById('canvas').appendChild(newArrow);
+        }
+      }
+    });
+  }
+
+  // Function to save trajectory (for now, just logs the HTML)
   function saveTrajectory() {
     const trajectoryHTML = document.getElementById('canvas').innerHTML;
     console.log("Trajectory saved:", trajectoryHTML);
     alert("Trajectory saved!");
   }
+
+  // Handling dragging in the canvas
+  const canvas = document.getElementById('canvas');
+  canvas.addEventListener('dragover', e => e.preventDefault());
+  canvas.addEventListener('drop', e => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text');
+    const block = document.getElementById(id);
+    
+    const canvasRect = canvas.getBoundingClientRect();
+    const blockRect = block.getBoundingClientRect();
+    
+    block.style.left = `${e.clientX - canvasRect.left - blockRect.width / 2}px`;
+    block.style.top = `${e.clientY - canvasRect.top - blockRect.height / 2}px`;
+  });
 </script>
 
 <style>
@@ -61,21 +143,22 @@ title: Medical Decision Trajectory Builder
     border: 1px solid #ccc;
     position: relative;
     background-color: #f9f9f9;
+    overflow: hidden;
   }
   .block {
     width: 150px;
     height: 50px;
     background-color: #FFD700;
-    margin: 10px;
     text-align: center;
     line-height: 50px;
     position: absolute;
     cursor: move;
     border-radius: 5px;
+    border: 1px solid #333;
   }
   .arrow {
-    font-size: 24px;
-    margin: 10px;
     position: absolute;
+    font-size: 24px;
+    color: black;
   }
 </style>
