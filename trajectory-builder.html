@@ -5,91 +5,73 @@ title: Medical Decision Trajectory Builder
 
 <h1>Build Medical Decision Trajectories</h1>
 
-<p>In this section, you can create and customize medical decision-making trajectories using blocks and arrows.</p>
+<p>In this section, you can create and customize medical decision-making trajectories using fixed-position blocks and arrows.</p>
 
 <div id="trajectory-builder-container">
   <div id="toolbox">
-    <button onclick="addBlock()">Add Decision Block</button>
+    <button onclick="addBlock()">Add First Block</button>
     <button onclick="saveTrajectory()">Save Trajectory</button>
   </div>
   <div id="canvas">
-    <!-- Medical decision trajectory will be built here -->
     <svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>
   </div>
 </div>
 
 <script>
   let blockCounter = 0;
+  let canvasWidth = 1000;  // Width of the canvas
+  let canvasHeight = 600;  // Height of the canvas
+  let blockWidth = 150;
+  let blockHeight = 50;
+  let spaceBetween = 50; // Space between blocks
 
-  // Function to add a block
-  function addBlock() {
+  function addBlock(existingBlock = null, direction = 'right') {
     blockCounter++;
     const block = document.createElement('div');
     block.classList.add('block');
     block.id = `block-${blockCounter}`;
     block.contentEditable = true;
-    block.textContent = "Decision Block";
-    block.style.position = 'absolute'; // Set position to absolute for easier dragging
-    block.style.left = '100px'; // Default position
-    block.style.top = `${50 * blockCounter}px`;
+    block.textContent = `Decision Block ${blockCounter}`;
+    block.style.position = 'absolute';
 
-    // Make the block draggable
-    makeDraggable(block);
+    const canvas = document.getElementById('canvas');
+
+    // Determine the position of the new block
+    if (!existingBlock) {
+      // If it's the first block, position it in the center
+      block.style.left = `${(canvasWidth / 2) - (blockWidth / 2)}px`;
+      block.style.top = `${canvasHeight / 2 - blockHeight / 2}px`;
+    } else {
+      const existingRect = existingBlock.getBoundingClientRect();
+      if (direction === 'right') {
+        // Position the new block to the right of the existing block
+        block.style.left = `${existingRect.right + spaceBetween}px`;
+        block.style.top = `${existingRect.top}px`;
+        drawArrow(existingRect, block.getBoundingClientRect());  // Draw an arrow
+      } else if (direction === 'left') {
+        // Position the new block to the left of the existing block
+        block.style.left = `${existingRect.left - blockWidth - spaceBetween}px`;
+        block.style.top = `${existingRect.top}px`;
+        drawArrow(block.getBoundingClientRect(), existingRect);  // Draw an arrow
+      }
+    }
+
+    // Attach click events for adding blocks to the left or right
+    block.addEventListener('dblclick', () => {
+      const direction = prompt('Add a new block to the left or right? (Type "left" or "right")');
+      if (direction === 'left' || direction === 'right') {
+        addBlock(block, direction);
+      }
+    });
 
     document.getElementById('canvas').appendChild(block);
-  }
-
-  function makeDraggable(block) {
-    let offsetX, offsetY;
-
-    block.addEventListener('mousedown', function(e) {
-      e.preventDefault();
-      const rect = block.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-
-      function moveBlock(e) {
-        block.style.left = `${e.clientX - offsetX}px`;
-        block.style.top = `${e.clientY - offsetY}px`;
-        updateArrows(); // Update arrows during block move
-      }
-
-      function stopDragging() {
-        document.removeEventListener('mousemove', moveBlock);
-        document.removeEventListener('mouseup', stopDragging);
-        // After dragging, finalize the position and connect arrows
-        updateArrows();
-      }
-
-      document.addEventListener('mousemove', moveBlock);
-      document.addEventListener('mouseup', stopDragging);
-    });
-  }
-
-  // Function to update the arrows between blocks
-  function updateArrows() {
-    const svgCanvas = document.getElementById('svg-canvas');
-    svgCanvas.innerHTML = ''; // Clear existing arrows
-
-    const blocks = document.querySelectorAll('.block');
-    blocks.forEach((blockA, index) => {
-      blocks.forEach(blockB => {
-        if (blockA !== blockB) {
-          const rectA = blockA.getBoundingClientRect();
-          const rectB = blockB.getBoundingClientRect();
-
-          // Only connect if blockB is to the right of blockA
-          if (rectA.right < rectB.left && Math.abs(rectA.top - rectB.top) < 50) {
-            drawArrow(rectA, rectB);
-          }
-        }
-      });
-    });
   }
 
   // Function to draw an arrow between two blocks
   function drawArrow(rectA, rectB) {
     const svgCanvas = document.getElementById('svg-canvas');
+
+    // Calculate start and end points of the arrow
     const startX = rectA.right;
     const startY = rectA.top + rectA.height / 2;
     const endX = rectB.left;
@@ -162,10 +144,9 @@ title: Medical Decision Trajectory Builder
     background-color: #FFD700;
     text-align: center;
     line-height: 50px;
-    position: absolute;
-    cursor: move;
     border-radius: 5px;
     border: 1px solid #333;
+    cursor: pointer;
   }
   svg {
     position: absolute;
