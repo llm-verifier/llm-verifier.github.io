@@ -3,14 +3,15 @@ layout: default
 title: Medical Decision Trajectory Builder
 ---
 
-<h1>Build Medical Decision Trajectories</h1>
+<h1>Medical Decision Trajectories</h1>
 
-<p>In this section, you can create and customize medical decision-making trajectories using fixed-position blocks and arrows.</p>
+<p><strong>Problem:</strong> A 79-year-old man presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of 25 years of heavy smoking. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis? (A) Asthma (B) Lymphangioleiomyomatosis (C) Chronic obstructive pulmonary disease (COPD) (D) Bronchiectasis (E) Heart failure</p>
+
+<p><strong>Example Medical Decision Trajectory:</strong></p>
 
 <div id="trajectory-builder-container">
   <div id="toolbox">
-    <button onclick="addBlock()">Add First Block</button>
-    <button onclick="saveTrajectory()">Save Trajectory</button>
+    <button onclick="resetExample()">Reset Example</button>
   </div>
   <div id="canvas">
     <svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>
@@ -19,59 +20,90 @@ title: Medical Decision Trajectory Builder
 
 <script>
   let blockCounter = 0;
+  let blockList = [];
+  let blockPositions = [];
   let canvasWidth = 1000;  // Width of the canvas
   let canvasHeight = 600;  // Height of the canvas
   let blockWidth = 150;
   let blockHeight = 50;
-  let spaceBetween = 50; // Space between blocks
+  let spaceBetween = 100; // Space between blocks
 
-  function addBlock(existingBlock = null, direction = 'right') {
+  function resetExample() {
+    // Clear the canvas and the SVG elements
+    document.getElementById('canvas').innerHTML = '<svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>';
+    blockList = [];
+    blockPositions = [];
+
+    // Add the example trajectory
+    addBlock("Patient Presentation", canvasWidth / 3 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
+    addBlock("COPD Diagnosis", canvasWidth / 2 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
+    addBlock("Treat with Inhalers", 2 * canvasWidth / 3 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
+
+    drawArrows();
+  }
+
+  function addBlock(text, x, y) {
     blockCounter++;
     const block = document.createElement('div');
     block.classList.add('block');
     block.id = `block-${blockCounter}`;
     block.contentEditable = true;
-    block.textContent = `Decision Block ${blockCounter}`;
+    block.textContent = text;
     block.style.position = 'absolute';
+    block.style.left = `${x}px`;
+    block.style.top = `${y}px`;
 
-    const canvas = document.getElementById('canvas');
-
-    // Determine the position of the new block
-    if (!existingBlock) {
-      // If it's the first block, position it in the center
-      block.style.left = `${(canvasWidth / 2) - (blockWidth / 2)}px`;
-      block.style.top = `${canvasHeight / 2 - blockHeight / 2}px`;
-    } else {
-      const existingRect = existingBlock.getBoundingClientRect();
-      if (direction === 'right') {
-        // Position the new block to the right of the existing block
-        block.style.left = `${existingRect.right + spaceBetween}px`;
-        block.style.top = `${existingRect.top}px`;
-        drawArrow(existingRect, block.getBoundingClientRect());  // Draw an arrow
-      } else if (direction === 'left') {
-        // Position the new block to the left of the existing block
-        block.style.left = `${existingRect.left - blockWidth - spaceBetween}px`;
-        block.style.top = `${existingRect.top}px`;
-        drawArrow(block.getBoundingClientRect(), existingRect);  // Draw an arrow
-      }
-    }
-
-    // Attach click events for adding blocks to the left or right
-    block.addEventListener('dblclick', () => {
-      const direction = prompt('Add a new block to the left or right? (Type "left" or "right")');
-      if (direction === 'left' || direction === 'right') {
-        addBlock(block, direction);
-      }
-    });
+    block.addEventListener('mousedown', startDragging);
 
     document.getElementById('canvas').appendChild(block);
+    blockList.push(block);
+    blockPositions.push({ x, y });
+  }
+
+  // Function to start dragging a block
+  function startDragging(e) {
+    const block = e.target;
+    let startX = e.clientX;
+    let startY = e.clientY;
+
+    function moveBlock(e) {
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+      const currentX = parseInt(block.style.left) + deltaX;
+      const currentY = parseInt(block.style.top) + deltaY;
+      block.style.left = `${currentX}px`;
+      block.style.top = `${currentY}px`;
+
+      startX = e.clientX;
+      startY = e.clientY;
+
+      drawArrows(); // Redraw arrows after moving
+    }
+
+    function stopDragging() {
+      document.removeEventListener('mousemove', moveBlock);
+      document.removeEventListener('mouseup', stopDragging);
+    }
+
+    document.addEventListener('mousemove', moveBlock);
+    document.addEventListener('mouseup', stopDragging);
+  }
+
+  // Function to draw arrows between blocks
+  function drawArrows() {
+    const svgCanvas = document.getElementById('svg-canvas');
+    svgCanvas.innerHTML = ''; // Clear existing arrows
+
+    for (let i = 0; i < blockList.length - 1; i++) {
+      const rectA = blockList[i].getBoundingClientRect();
+      const rectB = blockList[i + 1].getBoundingClientRect();
+      drawArrow(rectA, rectB);
+    }
   }
 
   // Function to draw an arrow between two blocks
   function drawArrow(rectA, rectB) {
     const svgCanvas = document.getElementById('svg-canvas');
-
-    // Calculate start and end points of the arrow
     const startX = rectA.right;
     const startY = rectA.top + rectA.height / 2;
     const endX = rectB.left;
@@ -107,6 +139,9 @@ title: Medical Decision Trajectory Builder
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     defs.appendChild(arrowHead);
     svgCanvas.appendChild(defs);
+
+    // Load the example trajectory on page load
+    resetExample();
   });
 
   function saveTrajectory() {
@@ -146,7 +181,7 @@ title: Medical Decision Trajectory Builder
     line-height: 50px;
     border-radius: 5px;
     border: 1px solid #333;
-    cursor: pointer;
+    cursor: move;
   }
   svg {
     position: absolute;
