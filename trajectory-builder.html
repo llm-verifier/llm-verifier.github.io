@@ -1,260 +1,147 @@
----
-layout: default
-title: Medical Decision Trajectory Builder
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Decision Trajectory Builder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #trajectory-container {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+        .trajectory {
+            width: 300px;
+            margin: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .block {
+            background-color: #FFD700;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .arrow {
+            text-align: center;
+            font-size: 20px;
+            color: #666;
+        }
+        .checkbox-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Medical Decision Trajectories</h1>
 
-<h1>Medical Decision Trajectories</h1>
+    <p><strong>Problem:</strong> A 79-year-old man presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of 25 years of heavy smoking. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis?</p>
 
-<p><strong>Problem:</strong> A 79-year-old man presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of 25 years of heavy smoking. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis? (A) Asthma (B) Lymphangioleiomyomatosis (C) Chronic obstructive pulmonary disease (COPD) (D) Bronchiectasis (E) Heart failure</p>
+    <div id="trajectory-container"></div>
 
-<p><strong>Example Medical Decision Trajectory:</strong></p>
+    <script>
+        const trajectories = {
+            COPD: [
+                "Age: 79, Male",
+                "History: 25 years smoking",
+                "Symptom: Shortness of breath",
+                "Exam: Decreased breath sounds",
+                "Test: FEV1/FVC = 56%",
+                "Diagnosis: COPD"
+            ],
+            Asthma: [
+                "Age: 79, Male",
+                "Symptom: Shortness of breath",
+                "Exam: Wheezing (possible)",
+                "Test: Reversible airflow obstruction",
+                "Additional Test: Bronchodilator response",
+                "Diagnosis: Asthma (less likely)"
+            ],
+            "Heart Failure": [
+                "Age: 79, Male",
+                "Symptom: Shortness of breath",
+                "Exam: Crackles at lung base",
+                "Test: Normal spirometry",
+                "Additional Test: Echocardiogram",
+                "Diagnosis: Heart Failure (possible)"
+            ],
+            Bronchiectasis: [
+                "Age: 79, Male",
+                "Symptom: Productive cough",
+                "Exam: Crackles at lung base",
+                "Test: Chest X-ray",
+                "Additional Test: High-resolution CT",
+                "Diagnosis: Bronchiectasis (less likely)"
+            ],
+            LAM: [
+                "Age: 79, Male (uncommon in males)",
+                "Symptom: Shortness of breath",
+                "Exam: Decreased breath sounds",
+                "Test: Chest X-ray (cystic appearance)",
+                "Additional Test: High-resolution CT",
+                "Diagnosis: Lymphangioleiomyomatosis (very unlikely)"
+            ]
+        };
 
-<div id="trajectory-builder-container">
-  <div id="toolbox">
-    <button onclick="resetExample()">Reset Example</button>
-    <button onclick="addNewBlock()">Add New Block</button>
-    <button onclick="enableArrowCreation()">Connect Blocks with Arrow</button>
-    <button onclick="removeSelectedArrow()">Remove Selected Arrow</button>
-  </div>
-  <div id="canvas">
-    <svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>
-  </div>
-</div>
+        function createTrajectory(name, steps) {
+            const trajectoryDiv = document.createElement('div');
+            trajectoryDiv.className = 'trajectory';
 
-<script>
-  let blockCounter = 0;
-  let blockList = [];
-  let lastBlock = null;
-  let selectedBlockA = null;
-  let selectedBlockB = null;
-  let canvasWidth = 1000;  // Width of the canvas
-  let canvasHeight = 600;  // Height of the canvas
-  let blockWidth = 150;
-  let blockHeight = 50;
-  let spaceBetween = 100; // Space between blocks
-  let currentArrow = null;
+            const header = document.createElement('h2');
+            header.textContent = name;
+            trajectoryDiv.appendChild(header);
 
-  function resetExample() {
-    // Clear the canvas and the SVG elements
-    document.getElementById('canvas').innerHTML = '<svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>';
-    blockList = [];
-    lastBlock = null;
-    currentArrow = null;
+            steps.forEach((step, index) => {
+                const block = document.createElement('div');
+                block.className = 'block';
+                block.textContent = step;
+                trajectoryDiv.appendChild(block);
 
-    // Add the example trajectory with more detailed blocks
-    addBlock("Age: 79, Male", canvasWidth / 5 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
-    addBlock("Symptom: Shortness of Breath", 2 * canvasWidth / 5 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
-    addBlock("Key Lab: Spirometry (FEV1/FVC = 56%)", 3 * canvasWidth / 5 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
-    addBlock("Diagnosis: COPD", 4 * canvasWidth / 5 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
+                if (index < steps.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '↓';
+                    trajectoryDiv.appendChild(arrow);
+                }
+            });
 
-    drawArrows();
-  }
+            const checkboxContainer = document.createElement('div');
+            checkboxContainer.className = 'checkbox-container';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `checkbox-${name}`;
+            const label = document.createElement('label');
+            label.htmlFor = `checkbox-${name}`;
+            label.textContent = 'Select this trajectory';
+            checkboxContainer.appendChild(checkbox);
+            checkboxContainer.appendChild(label);
+            trajectoryDiv.appendChild(checkboxContainer);
 
-  function addBlock(text, x, y) {
-    blockCounter++;
-    const block = document.createElement('div');
-    block.classList.add('block');
-    block.id = `block-${blockCounter}`;
-    block.contentEditable = true;
-    block.textContent = text;
-    block.style.position = 'absolute';
-    block.style.left = `${x}px`;
-    block.style.top = `${y}px`;
+            return trajectoryDiv;
+        }
 
-    block.addEventListener('mousedown', startDragging);
+        function displayTrajectories() {
+            const container = document.getElementById('trajectory-container');
+            for (const [name, steps] of Object.entries(trajectories)) {
+                const trajectoryElement = createTrajectory(name, steps);
+                container.appendChild(trajectoryElement);
+            }
+        }
 
-    // Adding block click to select block for creating/removing arrows
-    block.addEventListener('click', () => {
-      if (!selectedBlockA) {
-        selectedBlockA = block;
-        block.style.border = '2px solid blue';
-      } else if (!selectedBlockB) {
-        selectedBlockB = block;
-        block.style.border = '2px solid blue';
-        connectBlocks(selectedBlockA, selectedBlockB);
-        clearSelection();
-      }
-    });
-
-    document.getElementById('canvas').appendChild(block);
-    blockList.push(block);
-    lastBlock = block;
-  }
-
-  function clearSelection() {
-    if (selectedBlockA) {
-      selectedBlockA.style.border = '';
-      selectedBlockA = null;
-    }
-    if (selectedBlockB) {
-      selectedBlockB.style.border = '';
-      selectedBlockB = null;
-    }
-  }
-
-  // Function to start dragging a block
-  function startDragging(e) {
-    const block = e.target;
-    let startX = e.clientX;
-    let startY = e.clientY;
-
-    function moveBlock(e) {
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-      const currentX = parseInt(block.style.left) + deltaX;
-      const currentY = parseInt(block.style.top) + deltaY;
-      block.style.left = `${currentX}px`;
-      block.style.top = `${currentY}px`;
-
-      startX = e.clientX;
-      startY = e.clientY;
-
-      drawArrows(); // Redraw arrows after moving
-    }
-
-    function stopDragging() {
-      document.removeEventListener('mousemove', moveBlock);
-      document.removeEventListener('mouseup', stopDragging);
-    }
-
-    document.addEventListener('mousemove', moveBlock);
-    document.addEventListener('mouseup', stopDragging);
-  }
-
-  // Function to draw arrows between blocks
-  function drawArrows() {
-    const svgCanvas = document.getElementById('svg-canvas');
-    svgCanvas.innerHTML = ''; // Clear existing arrows
-
-    for (let i = 0; i < blockList.length - 1; i++) {
-      const rectA = blockList[i].getBoundingClientRect();
-      const rectB = blockList[i + 1].getBoundingClientRect();
-      drawArrow(rectA, rectB);
-    }
-  }
-
-  // Function to connect blocks with a manually created arrow
-  function connectBlocks(blockA, blockB) {
-    const rectA = blockA.getBoundingClientRect();
-    const rectB = blockB.getBoundingClientRect();
-    drawArrow(rectA, rectB);
-  }
-
-  // Function to draw an arrow between two blocks
-  function drawArrow(rectA, rectB) {
-    const svgCanvas = document.getElementById('svg-canvas');
-    const startX = rectA.right - document.getElementById('canvas').getBoundingClientRect().left;
-    const startY = rectA.top + rectA.height / 2 - document.getElementById('canvas').getBoundingClientRect().top;
-    const endX = rectB.left - document.getElementById('canvas').getBoundingClientRect().left;
-    const endY = rectB.top + rectB.height / 2 - document.getElementById('canvas').getBoundingClientRect().top;
-
-    const arrowLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    arrowLine.setAttribute('x1', startX);
-    arrowLine.setAttribute('y1', startY);
-    arrowLine.setAttribute('x2', endX);
-    arrowLine.setAttribute('y2', endY);
-    arrowLine.setAttribute('stroke', 'black');
-    arrowLine.setAttribute('stroke-width', '2');
-    arrowLine.setAttribute('marker-end', 'url(#arrowhead)');
-
-    svgCanvas.appendChild(arrowLine);
-  }
-
-  // Add arrow marker to the SVG canvas
-  document.addEventListener('DOMContentLoaded', function() {
-    const svgCanvas = document.getElementById('svg-canvas');
-    const arrowHead = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-    arrowHead.setAttribute('id', 'arrowhead');
-    arrowHead.setAttribute('markerWidth', '10');
-    arrowHead.setAttribute('markerHeight', '7');
-    arrowHead.setAttribute('refX', '10');
-    arrowHead.setAttribute('refY', '3.5');
-    arrowHead.setAttribute('orient', 'auto');
-    const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    arrowPath.setAttribute('d', 'M0,0 L10,3.5 L0,7');
-    arrowPath.setAttribute('fill', 'black');
-    arrowHead.appendChild(arrowPath);
-
-    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-    defs.appendChild(arrowHead);
-    svgCanvas.appendChild(defs);
-
-    // Load the example trajectory on page load
-    resetExample();
-  });
-
-  function addNewBlock() {
-    const x = lastBlock ? parseInt(lastBlock.style.left) + blockWidth + spaceBetween : canvasWidth / 2;
-    const y = lastBlock ? parseInt(lastBlock.style.top) : canvasHeight / 2 - blockHeight / 2;
-
-    const newText = prompt("Enter the name of the new block:", "New Block");
-    if (newText) {
-      addBlock(newText, x, y);
-      drawArrows(); // Redraw arrows to include the new block
-    }
-  }
-
-  function enableArrowCreation() {
-    alert("Click on two blocks to connect them with an arrow.");
-  }
-
-  function removeSelectedArrow() {
-    const svgCanvas = document.getElementById('svg-canvas');
-    if (currentArrow) {
-      svgCanvas.removeChild(currentArrow);
-      currentArrow = null;
-    }
-  }
-
-  function saveTrajectory() {
-    const trajectoryHTML = document.getElementById('canvas').innerHTML;
-    console.log("Trajectory saved:", trajectoryHTML);
-    alert("Trajectory saved!");
-  }
-</script>
-
-<style>
-  #trajectory-builder-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20px;
-  }
-  #toolbox {
-    margin-bottom: 20px;
-  }
-  button {
-    margin-right: 10px;
-    margin-bottom: 10px;
-  }
-  #canvas {
-    width: 1000px;
-    height: 600px;
-    border: 1px solid #ccc;
-    position: relative;
-    background-color: #f9f9f9;
-    overflow: hidden;
-  }
-  .block {
-    width: 150px;
-    height: 50px;
-    background-color: #FFD700;
-    text-align: center;
-    line-height: 50px;
-    border-radius: 5px;
-    border: 1px solid #333;
-    cursor: move;
-  }
-  svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-  }
-  line {
-    stroke: black;
-    stroke-width: 2;
-  }
-</style>
+        displayTrajectories();
+    </script>
+</body>
+</html>
