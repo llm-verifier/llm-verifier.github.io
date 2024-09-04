@@ -1,0 +1,81 @@
+---
+layout: default
+title: Medical Decision Trajectory Builder
+---
+
+<h1>Build Medical Decision Trajectories</h1>
+
+<p>In this section, you can create and customize medical decision-making trajectories using blocks and arrows.</p>
+
+<div id="trajectory-builder-container">
+  <div id="toolbox">
+    <button onclick="addBlock()">Add Decision Block</button>
+    <button onclick="addArrow()">Add Arrow</button>
+    <button onclick="saveTrajectory()">Save Trajectory</button>
+  </div>
+  <div id="canvas">
+    <!-- Medical decision trajectory will be built here -->
+  </div>
+</div>
+
+<script>
+  function addBlock() {
+    const block = document.createElement('div');
+    block.classList.add('block');
+    block.contentEditable = true;
+    block.textContent = "Decision Block";
+    document.getElementById('canvas').appendChild(block);
+  }
+
+  function addArrow() {
+    const arrow = document.createElement('div');
+    arrow.classList.add('arrow');
+    arrow.textContent = "→";
+    document.getElementById('canvas').appendChild(arrow);
+  }
+
+  function saveTrajectory() {
+    const trajectoryHTML = document.getElementById('canvas').innerHTML;
+    console.log("Trajectory saved:", trajectoryHTML);
+    alert("Trajectory saved!");
+  }
+</script>
+
+<style>
+  #trajectory-builder-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  #toolbox {
+    margin-bottom: 20px;
+  }
+  button {
+    margin-right: 10px;
+    margin-bottom: 10px;
+  }
+  #canvas {
+    width: 800px;
+    height: 600px;
+    border: 1px solid #ccc;
+    position: relative;
+    background-color: #f9f9f9;
+  }
+  .block {
+    width: 150px;
+    height: 50px;
+    background-color: #FFD700;
+    margin: 10px;
+    text-align: center;
+    line-height: 50px;
+    position: absolute;
+    cursor: move;
+    border-radius: 5px;
+  }
+  .arrow {
+    font-size: 24px;
+    margin: 10px;
+    position: absolute;
+  }
+</style>
