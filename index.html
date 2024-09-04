@@ -1,0 +1,36 @@
+---
+layout: default
+title: Medical Annotation Tool Main Page
+---
+
+<h1>Welcome to the Medical Annotation Tool</h1>
+
+<p>This tool allows doctors to annotate medical reasoning or build their own decision-making trajectories. Please choose from the following options:</p>
+
+<div id="main-buttons">
+  <button onclick="window.location.href='annotation-tool.html'">Annotate LLM Medical Reasoning</button>
+  <button onclick="window.location.href='trajectory-builder.html'">Build Medical Decision Trajectories</button>
+</div>
+
+<style>
+  #main-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+  }
+  button {
+    width: 300px;
+    padding: 15px;
+    margin: 20px;
+    font-size: 18px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #0056b3;
+  }
+</style>
