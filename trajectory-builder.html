@@ -29,7 +29,8 @@ title: Medical Decision Trajectory Builder
     block.id = `block-${blockCounter}`;
     block.contentEditable = true;
     block.textContent = "Decision Block";
-    block.style.left = '100px';
+    block.style.position = 'absolute'; // Set position to absolute for easier dragging
+    block.style.left = '100px'; // Default position
     block.style.top = `${50 * blockCounter}px`;
 
     // Make the block draggable
@@ -48,13 +49,15 @@ title: Medical Decision Trajectory Builder
       offsetY = e.clientY - rect.top;
 
       function moveBlock(e) {
-        block.style.transform = `translate(${e.clientX - offsetX}px, ${e.clientY - offsetY}px)`;
+        block.style.left = `${e.clientX - offsetX}px`;
+        block.style.top = `${e.clientY - offsetY}px`;
+        updateArrows(); // Update arrows during block move
       }
 
       function stopDragging() {
         document.removeEventListener('mousemove', moveBlock);
         document.removeEventListener('mouseup', stopDragging);
-        // After dragging, update position and connect arrows
+        // After dragging, finalize the position and connect arrows
         updateArrows();
       }
 
@@ -63,10 +66,10 @@ title: Medical Decision Trajectory Builder
     });
   }
 
+  // Function to update the arrows between blocks
   function updateArrows() {
-    // Clear existing arrows
     const svgCanvas = document.getElementById('svg-canvas');
-    svgCanvas.innerHTML = '';
+    svgCanvas.innerHTML = ''; // Clear existing arrows
 
     const blocks = document.querySelectorAll('.block');
     blocks.forEach((blockA, index) => {
@@ -84,6 +87,7 @@ title: Medical Decision Trajectory Builder
     });
   }
 
+  // Function to draw an arrow between two blocks
   function drawArrow(rectA, rectB) {
     const svgCanvas = document.getElementById('svg-canvas');
     const startX = rectA.right;
