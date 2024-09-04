@@ -1,6 +1,6 @@
 # Site settings
 title: Medical Annotation Tool
-description: A tool for doctors to annotate LLM reasoning on medical problems
+description: A tool for doctors to annotate and build medical decision trajectories
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
 
@@ -18,9 +18,10 @@ exclude:
   - vendor/gems/
   - vendor/ruby/
 
-# Include the annotation tool page
+# Include pages
 include:
   - annotation-tool.html
+  - trajectory-builder.html
 
 # Plugins
 plugins:
@@ -40,6 +41,7 @@ defaults:
 header_pages:
   - about.md
   - annotation-tool.html
+  - trajectory-builder.html
 
 # Google Analytics
 google_analytics: # Your Google Analytics tracking ID here
