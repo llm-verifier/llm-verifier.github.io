@@ -13,6 +13,8 @@ title: Medical Decision Trajectory Builder
   <div id="toolbox">
     <button onclick="resetExample()">Reset Example</button>
     <button onclick="addNewBlock()">Add New Block</button>
+    <button onclick="enableArrowCreation()">Connect Blocks with Arrow</button>
+    <button onclick="removeSelectedArrow()">Remove Selected Arrow</button>
   </div>
   <div id="canvas">
     <svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>
@@ -23,17 +25,21 @@ title: Medical Decision Trajectory Builder
   let blockCounter = 0;
   let blockList = [];
   let lastBlock = null;
+  let selectedBlockA = null;
+  let selectedBlockB = null;
   let canvasWidth = 1000;  // Width of the canvas
   let canvasHeight = 600;  // Height of the canvas
   let blockWidth = 150;
   let blockHeight = 50;
   let spaceBetween = 100; // Space between blocks
+  let currentArrow = null;
 
   function resetExample() {
     // Clear the canvas and the SVG elements
     document.getElementById('canvas').innerHTML = '<svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>';
     blockList = [];
     lastBlock = null;
+    currentArrow = null;
 
     // Add the example trajectory with more detailed blocks
     addBlock("Age: 79, Male", canvasWidth / 5 - blockWidth / 2, canvasHeight / 2 - blockHeight / 2);
@@ -57,9 +63,33 @@ title: Medical Decision Trajectory Builder
 
     block.addEventListener('mousedown', startDragging);
 
+    // Adding block click to select block for creating/removing arrows
+    block.addEventListener('click', () => {
+      if (!selectedBlockA) {
+        selectedBlockA = block;
+        block.style.border = '2px solid blue';
+      } else if (!selectedBlockB) {
+        selectedBlockB = block;
+        block.style.border = '2px solid blue';
+        connectBlocks(selectedBlockA, selectedBlockB);
+        clearSelection();
+      }
+    });
+
     document.getElementById('canvas').appendChild(block);
     blockList.push(block);
     lastBlock = block;
+  }
+
+  function clearSelection() {
+    if (selectedBlockA) {
+      selectedBlockA.style.border = '';
+      selectedBlockA = null;
+    }
+    if (selectedBlockB) {
+      selectedBlockB.style.border = '';
+      selectedBlockB = null;
+    }
   }
 
   // Function to start dragging a block
@@ -103,6 +133,13 @@ title: Medical Decision Trajectory Builder
     }
   }
 
+  // Function to connect blocks with a manually created arrow
+  function connectBlocks(blockA, blockB) {
+    const rectA = blockA.getBoundingClientRect();
+    const rectB = blockB.getBoundingClientRect();
+    drawArrow(rectA, rectB);
+  }
+
   // Function to draw an arrow between two blocks
   function drawArrow(rectA, rectB) {
     const svgCanvas = document.getElementById('svg-canvas');
@@ -121,18 +158,6 @@ title: Medical Decision Trajectory Builder
     arrowLine.setAttribute('marker-end', 'url(#arrowhead)');
 
     svgCanvas.appendChild(arrowLine);
-  }
-
-  // Function to add new block and automatically connect it with an arrow
-  function addNewBlock() {
-    const x = lastBlock ? parseInt(lastBlock.style.left) + blockWidth + spaceBetween : canvasWidth / 2;
-    const y = lastBlock ? parseInt(lastBlock.style.top) : canvasHeight / 2 - blockHeight / 2;
-
-    const newText = prompt("Enter the name of the new block:", "New Block");
-    if (newText) {
-      addBlock(newText, x, y);
-      drawArrows(); // Redraw arrows to include the new block
-    }
   }
 
   // Add arrow marker to the SVG canvas
@@ -157,6 +182,29 @@ title: Medical Decision Trajectory Builder
     // Load the example trajectory on page load
     resetExample();
   });
+
+  function addNewBlock() {
+    const x = lastBlock ? parseInt(lastBlock.style.left) + blockWidth + spaceBetween : canvasWidth / 2;
+    const y = lastBlock ? parseInt(lastBlock.style.top) : canvasHeight / 2 - blockHeight / 2;
+
+    const newText = prompt("Enter the name of the new block:", "New Block");
+    if (newText) {
+      addBlock(newText, x, y);
+      drawArrows(); // Redraw arrows to include the new block
+    }
+  }
+
+  function enableArrowCreation() {
+    alert("Click on two blocks to connect them with an arrow.");
+  }
+
+  function removeSelectedArrow() {
+    const svgCanvas = document.getElementById('svg-canvas');
+    if (currentArrow) {
+      svgCanvas.removeChild(currentArrow);
+      currentArrow = null;
+    }
+  }
 
   function saveTrajectory() {
     const trajectoryHTML = document.getElementById('canvas').innerHTML;
