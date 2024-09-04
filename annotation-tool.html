@@ -24,12 +24,16 @@ title: Medical Annotation Tool
 </div>
 
 <script>
-  const problem = "A 79-year-old man presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of 25 years of heavy smoking. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis?\n(A) Asthma (B) Lymphangioleiomyomatosis (C) Chronic obstructive pulmonary disease (COPD) (D) Bronchiectasis (E) Heart failure";
+  document.addEventListener('DOMContentLoaded', function() {
+    // Define the medical problem and LLM reasoning content
+    const problem = "A 79-year-old man presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of 25 years of heavy smoking. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis?\n(A) Asthma (B) Lymphangioleiomyomatosis (C) Chronic obstructive pulmonary disease (COPD) (D) Bronchiectasis (E) Heart failure";
 
-  const llmReasoning = "Based on the patient's symptoms and test results, the most likely diagnosis is Chronic Obstructive Pulmonary Disease (COPD). The patient's history of heavy smoking for 25 years is a significant risk factor for COPD. The shortness of breath with exertion and productive cough are classic symptoms. The physical exam findings of increased resonance to percussion and decreased breath sounds indicate air trapping, which is characteristic of COPD. The spirometry results show an FEV1/FVC ratio of 56%, which meets the criteria for COPD diagnosis. Additionally, the chest X-ray showing pulmonary hyperinflation is consistent with COPD. The crackles at the lung base suggest the presence of pneumonia, which is a common complication in COPD patients. The elevated respiratory rate of 27/min indicates that the patient is in respiratory distress, likely due to an acute exacerbation of COPD.";
+    const llmReasoning = "Based on the patient's symptoms and test results, the most likely diagnosis is Chronic Obstructive Pulmonary Disease (COPD). The patient's history of heavy smoking for 25 years is a significant risk factor for COPD. The shortness of breath with exertion and productive cough are classic symptoms. The physical exam findings of increased resonance to percussion and decreased breath sounds indicate air trapping, which is characteristic of COPD. The spirometry results show an FEV1/FVC ratio of 56%, which meets the criteria for COPD diagnosis. Additionally, the chest X-ray showing pulmonary hyperinflation is consistent with COPD. The crackles at the lung base suggest the presence of pneumonia, which is a common complication in COPD patients. The elevated respiratory rate of 27/min indicates that the patient is in respiratory distress, likely due to an acute exacerbation of COPD.";
 
-  document.getElementById('medical-problem').textContent = problem;
-  document.getElementById('llm-reasoning').textContent = llmReasoning;
+    // Display the problem and reasoning on the page
+    document.getElementById('medical-problem').textContent = problem;
+    document.getElementById('llm-reasoning').textContent = llmReasoning;
+  });
 
   const annotationStyles = {
     strikethrough: { style: 'text-decoration: line-through;', color: '#FF0000' },
@@ -46,7 +50,7 @@ title: Medical Annotation Tool
     const range = selection.getRangeAt(0);
     const span = document.createElement('span');
     span.style = annotationStyles[type].style;
-    span.className = annotation ${type};
+    span.className = `annotation ${type}`;
     range.surroundContents(span);
   }
 
