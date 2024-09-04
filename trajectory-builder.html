@@ -14,6 +14,7 @@ title: Medical Decision Trajectory Builder
   </div>
   <div id="canvas">
     <!-- Medical decision trajectory will be built here -->
+    <svg id="svg-canvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></svg>
   </div>
 </div>
 
@@ -30,97 +31,103 @@ title: Medical Decision Trajectory Builder
     block.textContent = "Decision Block";
     block.style.left = '100px';
     block.style.top = `${50 * blockCounter}px`;
-    
+
     // Make the block draggable
     makeDraggable(block);
-    
+
     document.getElementById('canvas').appendChild(block);
   }
 
-  // Make a block draggable and add arrow handling
   function makeDraggable(block) {
-    block.draggable = true;
-    
-    block.addEventListener('dragstart', dragStart);
-    block.addEventListener('dragend', dragEnd);
-    block.addEventListener('dblclick', addArrow);
-  }
+    let offsetX, offsetY;
 
-  function dragStart(e) {
-    e.dataTransfer.setData('text', e.target.id);
-    setTimeout(() => (e.target.style.opacity = "0.5"), 0);
-  }
+    block.addEventListener('mousedown', function(e) {
+      e.preventDefault();
+      const rect = block.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
 
-  function dragEnd(e) {
-    e.target.style.opacity = "1";
-    const rect = e.target.getBoundingClientRect();
-    e.target.style.left = `${rect.left}px`;
-    e.target.style.top = `${rect.top}px`;
-    createArrows(e.target);
-  }
-
-  // Add arrow automatically when double-clicking a block
-  function addArrow(e) {
-    const newArrow = document.createElement('div');
-    newArrow.classList.add('arrow');
-    newArrow.textContent = "→";
-    
-    document.getElementById('canvas').appendChild(newArrow);
-
-    const rect = e.target.getBoundingClientRect();
-    const arrowX = rect.right;
-    const arrowY = rect.top + rect.height / 2;
-
-    newArrow.style.left = `${arrowX + 10}px`;
-    newArrow.style.top = `${arrowY}px`;
-  }
-
-  function createArrows(block) {
-    // Automatically create arrows between blocks based on positioning
-    const blocks = document.querySelectorAll('.block');
-    blocks.forEach(targetBlock => {
-      if (block !== targetBlock) {
-        const sourceRect = block.getBoundingClientRect();
-        const targetRect = targetBlock.getBoundingClientRect();
-        
-        if (sourceRect.right < targetRect.left && Math.abs(sourceRect.top - targetRect.top) < 50) {
-          const newArrow = document.createElement('div');
-          newArrow.classList.add('arrow');
-          newArrow.textContent = "→";
-
-          const arrowX = sourceRect.right;
-          const arrowY = sourceRect.top + sourceRect.height / 2;
-
-          newArrow.style.left = `${arrowX + 10}px`;
-          newArrow.style.top = `${arrowY}px`;
-
-          document.getElementById('canvas').appendChild(newArrow);
-        }
+      function moveBlock(e) {
+        block.style.transform = `translate(${e.clientX - offsetX}px, ${e.clientY - offsetY}px)`;
       }
+
+      function stopDragging() {
+        document.removeEventListener('mousemove', moveBlock);
+        document.removeEventListener('mouseup', stopDragging);
+        // After dragging, update position and connect arrows
+        updateArrows();
+      }
+
+      document.addEventListener('mousemove', moveBlock);
+      document.addEventListener('mouseup', stopDragging);
     });
   }
 
-  // Function to save trajectory (for now, just logs the HTML)
+  function updateArrows() {
+    // Clear existing arrows
+    const svgCanvas = document.getElementById('svg-canvas');
+    svgCanvas.innerHTML = '';
+
+    const blocks = document.querySelectorAll('.block');
+    blocks.forEach((blockA, index) => {
+      blocks.forEach(blockB => {
+        if (blockA !== blockB) {
+          const rectA = blockA.getBoundingClientRect();
+          const rectB = blockB.getBoundingClientRect();
+
+          // Only connect if blockB is to the right of blockA
+          if (rectA.right < rectB.left && Math.abs(rectA.top - rectB.top) < 50) {
+            drawArrow(rectA, rectB);
+          }
+        }
+      });
+    });
+  }
+
+  function drawArrow(rectA, rectB) {
+    const svgCanvas = document.getElementById('svg-canvas');
+    const startX = rectA.right;
+    const startY = rectA.top + rectA.height / 2;
+    const endX = rectB.left;
+    const endY = rectB.top + rectB.height / 2;
+
+    const arrowLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    arrowLine.setAttribute('x1', startX);
+    arrowLine.setAttribute('y1', startY);
+    arrowLine.setAttribute('x2', endX);
+    arrowLine.setAttribute('y2', endY);
+    arrowLine.setAttribute('stroke', 'black');
+    arrowLine.setAttribute('stroke-width', '2');
+    arrowLine.setAttribute('marker-end', 'url(#arrowhead)');
+
+    svgCanvas.appendChild(arrowLine);
+  }
+
+  // Add arrow marker to the SVG canvas
+  document.addEventListener('DOMContentLoaded', function() {
+    const svgCanvas = document.getElementById('svg-canvas');
+    const arrowHead = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+    arrowHead.setAttribute('id', 'arrowhead');
+    arrowHead.setAttribute('markerWidth', '10');
+    arrowHead.setAttribute('markerHeight', '7');
+    arrowHead.setAttribute('refX', '10');
+    arrowHead.setAttribute('refY', '3.5');
+    arrowHead.setAttribute('orient', 'auto');
+    const arrowPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    arrowPath.setAttribute('d', 'M0,0 L10,3.5 L0,7');
+    arrowPath.setAttribute('fill', 'black');
+    arrowHead.appendChild(arrowPath);
+
+    const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+    defs.appendChild(arrowHead);
+    svgCanvas.appendChild(defs);
+  });
+
   function saveTrajectory() {
     const trajectoryHTML = document.getElementById('canvas').innerHTML;
     console.log("Trajectory saved:", trajectoryHTML);
     alert("Trajectory saved!");
   }
-
-  // Handling dragging in the canvas
-  const canvas = document.getElementById('canvas');
-  canvas.addEventListener('dragover', e => e.preventDefault());
-  canvas.addEventListener('drop', e => {
-    e.preventDefault();
-    const id = e.dataTransfer.getData('text');
-    const block = document.getElementById(id);
-    
-    const canvasRect = canvas.getBoundingClientRect();
-    const blockRect = block.getBoundingClientRect();
-    
-    block.style.left = `${e.clientX - canvasRect.left - blockRect.width / 2}px`;
-    block.style.top = `${e.clientY - canvasRect.top - blockRect.height / 2}px`;
-  });
 </script>
 
 <style>
@@ -138,7 +145,7 @@ title: Medical Decision Trajectory Builder
     margin-bottom: 10px;
   }
   #canvas {
-    width: 800px;
+    width: 1000px;
     height: 600px;
     border: 1px solid #ccc;
     position: relative;
@@ -156,9 +163,16 @@ title: Medical Decision Trajectory Builder
     border-radius: 5px;
     border: 1px solid #333;
   }
-  .arrow {
+  svg {
     position: absolute;
-    font-size: 24px;
-    color: black;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  line {
+    stroke: black;
+    stroke-width: 2;
   }
 </style>
