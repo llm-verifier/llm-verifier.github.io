@@ -25,7 +25,8 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.3s ease, border 0.3s ease;
+            cursor: pointer;
         }
         .block {
             background-color: #FFD700;
@@ -40,10 +41,6 @@
             text-align: center;
             font-size: 20px;
             color: #666;
-        }
-        .checkbox-container {
-            margin-top: 10px;
-            text-align: center;
         }
         /* Add selected styles */
         .trajectory.selected {
@@ -60,6 +57,12 @@
         .viridis-2 { background-color: #31688e33; }  /* Viridis-like color at 25% intensity */
         .viridis-3 { background-color: #35b77933; }  /* Viridis-like color at 50% intensity */
         .viridis-4 { background-color: #fde72533; }  /* Viridis-like color at 75% intensity */
+        .correct {
+            border: 3px solid green;
+        }
+        .incorrect {
+            border: 3px solid red;
+        }
     </style>
 </head>
 <body>
@@ -91,10 +94,33 @@
                 { text: "Test: FEV1/FVC ratio = 56%", highlightId: "test4-highlight", colorClass: "viridis-3" },
                 "Diagnosis: Asthma"
             ],
-            // Other diagnoses like HeartFailure, Bronchiectasis, LAM follow similar patterns
+            HeartFailure: [
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "viridis-1" },
+                { text: "Symptom: Shortness of breath with moderate exertion", highlightId: "symptom1-highlight", colorClass: "viridis-3" },
+                { text: "Symptom: Slightly productive cough", highlightId: "symptom2-highlight", colorClass: "viridis-3" },
+                { text: "Exam: Crackles at lung base", highlightId: "exam3-highlight", colorClass: "viridis-4" },
+                { text: "Test: Chest radiography", highlightId: "test1-highlight", colorClass: "viridis-3" },
+                "Diagnosis: Heart failure"
+            ],
+            Bronchiectasis: [
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "viridis-1" },
+                { text: "Symptom: Shortness of breath with moderate exertion", highlightId: "symptom1-highlight", colorClass: "viridis-3" },
+                { text: "Symptom: Slightly productive cough", highlightId: "symptom2-highlight", colorClass: "viridis-3" },
+                { text: "Exam: Crackles at lung base", highlightId: "exam3-highlight", colorClass: "viridis-4" },
+                { text: "Test: Chest radiography", highlightId: "test1-highlight", colorClass: "viridis-3" },
+                "Diagnosis: Bronchiectasis"
+            ],
+            LAM: [
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "viridis-1" },
+                { text: "Symptom: Shortness of breath with moderate exertion", highlightId: "symptom1-highlight", colorClass: "viridis-3" },
+                { text: "Symptom: Slightly productive cough", highlightId: "symptom2-highlight", colorClass: "viridis-3" },
+                { text: "Exam: Decreased breath sounds", highlightId: "exam2-highlight", colorClass: "viridis-4" },
+                { text: "Test: Chest radiography", highlightId: "test1-highlight", colorClass: "viridis-3" },
+                "Diagnosis: Lymphangioleiomyomatosis (LAM)"
+            ]
         };
 
-        function createTrajectory(name, steps) {
+        function createTrajectory(name, steps, isCorrect = false) {
             const trajectoryDiv = document.createElement('div');
             trajectoryDiv.className = 'trajectory';
             trajectoryDiv.setAttribute('data-name', name);
@@ -116,26 +142,36 @@
                     trajectoryDiv.appendChild(arrow);
                 }
 
-                // Add click event for highlighting
-                block.addEventListener('click', () => {
-                    selectTrajectory(trajectoryDiv, steps);
+                // Click event for selecting and highlighting
+                trajectoryDiv.addEventListener('click', () => {
+                    selectTrajectory(trajectoryDiv, steps, isCorrect);
                 });
+
+                // Double-click to reset
+                trajectoryDiv.addEventListener('dblclick', resetTrajectories);
             });
 
             return trajectoryDiv;
         }
 
-        function selectTrajectory(selectedDiv, steps) {
+        function selectTrajectory(selectedDiv, steps, isCorrect) {
             // Make other trajectories transparent
             const allTrajectories = document.querySelectorAll('.trajectory');
             allTrajectories.forEach(trajectory => {
                 trajectory.classList.add('transparent');
-                trajectory.classList.remove('selected');
+                trajectory.classList.remove('selected', 'correct', 'incorrect');
             });
 
             // Select the current trajectory
             selectedDiv.classList.add('selected');
             selectedDiv.classList.remove('transparent');
+
+            // Add green or red contour
+            if (isCorrect) {
+                selectedDiv.classList.add('correct');
+            } else {
+                selectedDiv.classList.add('incorrect');
+            }
 
             // Reset highlights
             document.querySelectorAll('.highlight').forEach(el => {
@@ -151,10 +187,25 @@
             });
         }
 
+        function resetTrajectories() {
+            // Remove transparency and contours
+            const allTrajectories = document.querySelectorAll('.trajectory');
+            allTrajectories.forEach(trajectory => {
+                trajectory.classList.remove('transparent', 'correct', 'incorrect');
+                trajectory.classList.add('selected');
+            });
+
+            // Reset all highlights
+            document.querySelectorAll('.highlight').forEach(el => {
+                el.classList.remove('viridis-1', 'viridis-2', 'viridis-3', 'viridis-4');
+            });
+        }
+
         function displayTrajectories() {
             const container = document.getElementById('trajectory-container');
             for (const [name, steps] of Object.entries(trajectories)) {
-                const trajectoryElement = createTrajectory(name, steps);
+                const isCorrect = (name === 'COPD');  // Mark COPD as the correct answer
+                const trajectoryElement = createTrajectory(name, steps, isCorrect);
                 container.appendChild(trajectoryElement);
             }
         }
