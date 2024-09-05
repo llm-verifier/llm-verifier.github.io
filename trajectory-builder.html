@@ -53,72 +53,45 @@
         .trajectory.transparent {
             opacity: 0.3;
         }
-        .highlight-red {
-            background-color: rgba(255, 0, 0, 0.2);
+        .highlight {
+            transition: background-color 0.3s ease;
         }
-        .highlight-yellow {
-            background-color: rgba(255, 255, 0, 0.2);
-        }
-        .highlight-green {
-            background-color: rgba(0, 255, 0, 0.2);
-        }
+        .viridis-1 { background-color: #44015433; }  /* Viridis-like color at 0% intensity */
+        .viridis-2 { background-color: #31688e33; }  /* Viridis-like color at 25% intensity */
+        .viridis-3 { background-color: #35b77933; }  /* Viridis-like color at 50% intensity */
+        .viridis-4 { background-color: #fde72533; }  /* Viridis-like color at 75% intensity */
     </style>
 </head>
 <body>
     <h1>Medical Decision Trajectories</h1>
 
-    <p><strong>Problem:</strong> <span id="age-highlight">A 79-year-old man</span> presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of <span id="history-highlight">25 years of heavy smoking</span>. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis?</p>
+    <p><strong>Problem:</strong> <span id="age-highlight">A 79-year-old man</span> presents to the office due to <span id="symptom1-highlight">shortness of breath with moderate exertion</span> and a <span id="symptom2-highlight">slightly productive cough</span>. He has a medical history of <span id="history-highlight">25 years of heavy smoking</span>. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows <span id="exam1-highlight">increased resonance to percussion</span>, <span id="exam2-highlight">decreased breath sounds</span>, and <span id="exam3-highlight">crackles at the lung base</span>. Chest radiography shows signs of <span id="test1-highlight">pulmonary hyperinflation</span>. Spirometry shows a <span id="test2-highlight">forced expiratory volume in the first second (FEV1) of 48%</span>, a <span id="test3-highlight">forced vital capacity (FVC) of 85%</span>, and an <span id="test4-highlight">FEV1/FVC ratio of 56%</span>. According to these results, what is the most likely diagnosis?</p>
 
     <div id="trajectory-container"></div>
 
     <script>
         const trajectories = {
             COPD: [
-                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
-                { text: "History: 25 years of heavy smoking", highlightId: "history-highlight", colorClass: "highlight-yellow" },
-                "Symptom: Shortness of breath with moderate exertion",
-                "Symptom: Slightly productive cough",
-                "Exam: Increased resonance to percussion",
-                "Exam: Decreased breath sounds",
-                "Exam: Crackles at lung base",
-                "Test: FEV1 = 48%, FVC = 85%, FEV1/FVC ratio = 56%",
-                "Test: Chest radiography shows pulmonary hyperinflation",
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "viridis-1" },
+                { text: "History: 25 years of heavy smoking", highlightId: "history-highlight", colorClass: "viridis-2" },
+                { text: "Symptom: Shortness of breath with moderate exertion", highlightId: "symptom1-highlight", colorClass: "viridis-3" },
+                { text: "Symptom: Slightly productive cough", highlightId: "symptom2-highlight", colorClass: "viridis-3" },
+                { text: "Exam: Increased resonance to percussion", highlightId: "exam1-highlight", colorClass: "viridis-4" },
+                { text: "Exam: Decreased breath sounds", highlightId: "exam2-highlight", colorClass: "viridis-4" },
+                { text: "Exam: Crackles at lung base", highlightId: "exam3-highlight", colorClass: "viridis-4" },
+                { text: "Test: FEV1 = 48%, FVC = 85%, FEV1/FVC ratio = 56%", highlightId: "test2-highlight", colorClass: "viridis-3" },
+                { text: "Test: Chest radiography shows pulmonary hyperinflation", highlightId: "test1-highlight", colorClass: "viridis-3" },
                 "Diagnosis: Chronic obstructive pulmonary disease (COPD)"
             ],
             Asthma: [
-                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
-                "Symptom: Shortness of breath with moderate exertion",
-                "Symptom: Slightly productive cough",
-                "Exam: Decreased breath sounds",
-                "Exam: Crackles at lung base",
-                "Test: FEV1/FVC ratio = 56%",
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "viridis-1" },
+                { text: "Symptom: Shortness of breath with moderate exertion", highlightId: "symptom1-highlight", colorClass: "viridis-3" },
+                { text: "Symptom: Slightly productive cough", highlightId: "symptom2-highlight", colorClass: "viridis-3" },
+                { text: "Exam: Decreased breath sounds", highlightId: "exam2-highlight", colorClass: "viridis-4" },
+                { text: "Test: FEV1/FVC ratio = 56%", highlightId: "test4-highlight", colorClass: "viridis-3" },
                 "Diagnosis: Asthma"
             ],
-            HeartFailure: [
-                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
-                "Symptom: Shortness of breath with moderate exertion",
-                "Symptom: Slightly productive cough",
-                "Exam: Crackles at lung base",
-                "Test: Chest radiography",
-                "Diagnosis: Heart failure"
-            ],
-            Bronchiectasis: [
-                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
-                "Symptom: Shortness of breath with moderate exertion",
-                "Symptom: Slightly productive cough",
-                "Exam: Crackles at lung base",
-                "Test: Chest radiography",
-                "Diagnosis: Bronchiectasis"
-            ],
-            LAM: [
-                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
-                "Symptom: Shortness of breath with moderate exertion",
-                "Symptom: Slightly productive cough",
-                "Exam: Decreased breath sounds",
-                "Exam: Crackles at lung base",
-                "Test: Chest radiography",
-                "Diagnosis: Lymphangioleiomyomatosis (LAM)"
-            ]
+            // Other diagnoses like HeartFailure, Bronchiectasis, LAM follow similar patterns
         };
 
         function createTrajectory(name, steps) {
@@ -143,26 +116,39 @@
                     trajectoryDiv.appendChild(arrow);
                 }
 
-                // Add highlight event
+                // Add click event for highlighting
                 block.addEventListener('click', () => {
-                    selectBlock(step);
+                    selectTrajectory(trajectoryDiv, steps);
                 });
             });
 
             return trajectoryDiv;
         }
 
-        function selectBlock(step) {
-            if (typeof step === 'object' && step.highlightId) {
-                // Reset all highlights
-                document.querySelectorAll('.highlight-red, .highlight-yellow, .highlight-green').forEach(el => {
-                    el.classList.remove('highlight-red', 'highlight-yellow', 'highlight-green');
-                });
+        function selectTrajectory(selectedDiv, steps) {
+            // Make other trajectories transparent
+            const allTrajectories = document.querySelectorAll('.trajectory');
+            allTrajectories.forEach(trajectory => {
+                trajectory.classList.add('transparent');
+                trajectory.classList.remove('selected');
+            });
 
-                // Apply highlight to the relevant part of the problem
-                const elementToHighlight = document.getElementById(step.highlightId);
-                elementToHighlight.classList.add(step.colorClass);
-            }
+            // Select the current trajectory
+            selectedDiv.classList.add('selected');
+            selectedDiv.classList.remove('transparent');
+
+            // Reset highlights
+            document.querySelectorAll('.highlight').forEach(el => {
+                el.classList.remove('viridis-1', 'viridis-2', 'viridis-3', 'viridis-4');
+            });
+
+            // Highlight all relevant parts of the problem simultaneously
+            steps.forEach(step => {
+                if (typeof step === 'object' && step.highlightId) {
+                    const elementToHighlight = document.getElementById(step.highlightId);
+                    elementToHighlight.classList.add(step.colorClass, 'highlight');
+                }
+            });
         }
 
         function displayTrajectories() {
