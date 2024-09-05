@@ -47,3 +47,7 @@ header_pages:
 
 # Google Analytics
 google_analytics: # Your Google Analytics tracking ID here
+
+# Custom styles
+sass:
+  custom: "assets/css/main.scss"
