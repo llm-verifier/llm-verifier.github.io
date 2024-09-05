@@ -65,45 +65,52 @@
         const trajectories = {
             COPD: [
                 "Age: 79, Male",
-                "History: 25 years smoking",
-                "Symptom: Shortness of breath",
+                "History: 25 years of heavy smoking",
+                "Symptom: Shortness of breath with moderate exertion",
+                "Symptom: Slightly productive cough",
+                "Exam: Increased resonance to percussion",
                 "Exam: Decreased breath sounds",
-                "Test: FEV1/FVC = 56%",
-                "Diagnosis: COPD"
+                "Exam: Crackles at lung base",
+                "Test: FEV1 = 48%, FVC = 85%, FEV1/FVC ratio = 56%",
+                "Test: Chest radiography shows pulmonary hyperinflation",
+                "Diagnosis: Chronic obstructive pulmonary disease (COPD)"
             ],
             Asthma: [
                 "Age: 79, Male",
-                "Symptom: Shortness of breath",
-                "Exam: Wheezing (possible)",
-                "Test: Reversible airflow obstruction",
-                "Additional Test: Bronchodilator response",
-                "Diagnosis: Asthma (less likely)"
-            ],
-            "Heart Failure": [
-                "Age: 79, Male",
-                "Symptom: Shortness of breath",
+                "Symptom: Shortness of breath with moderate exertion",
+                "Symptom: Slightly productive cough",
+                "Exam: Decreased breath sounds",
                 "Exam: Crackles at lung base",
-                "Test: Normal spirometry",
-                "Additional Test: Echocardiogram",
-                "Diagnosis: Heart Failure (possible)"
+                "Test: FEV1/FVC ratio = 56%",
+                "Diagnosis: Asthma"
+            ],
+            HeartFailure: [
+                "Age: 79, Male",
+                "Symptom: Shortness of breath with moderate exertion",
+                "Symptom: Slightly productive cough",
+                "Exam: Crackles at lung base",
+                "Test: Chest radiography",
+                "Diagnosis: Heart failure"
             ],
             Bronchiectasis: [
                 "Age: 79, Male",
-                "Symptom: Productive cough",
+                "Symptom: Shortness of breath with moderate exertion",
+                "Symptom: Slightly productive cough",
                 "Exam: Crackles at lung base",
-                "Test: Chest X-ray",
-                "Additional Test: High-resolution CT",
-                "Diagnosis: Bronchiectasis (less likely)"
+                "Test: Chest radiography",
+                "Diagnosis: Bronchiectasis"
             ],
             LAM: [
-                "Age: 79, Male (uncommon in males)",
-                "Symptom: Shortness of breath",
+                "Age: 79, Male",
+                "Symptom: Shortness of breath with moderate exertion",
+                "Symptom: Slightly productive cough",
                 "Exam: Decreased breath sounds",
-                "Test: Chest X-ray (cystic appearance)",
-                "Additional Test: High-resolution CT",
-                "Diagnosis: Lymphangioleiomyomatosis (very unlikely)"
+                "Exam: Crackles at lung base",
+                "Test: Chest radiography",
+                "Diagnosis: Lymphangioleiomyomatosis (LAM)"
             ]
         };
+
 
         function createTrajectory(name, steps) {
             const trajectoryDiv = document.createElement('div');
