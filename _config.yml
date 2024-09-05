@@ -39,11 +39,11 @@ defaults:
       layout: "default"
 
 # Navigation
-header_pages:
-  - about.md
-  - annotation-tool.html
-  - trajectory-builder.html
-  - patient-llm.html
+# header_pages:
+#   - about.md
+#   - annotation-tool.html
+#   - trajectory-builder.html
+#   - patient-llm.html
 
 # Google Analytics
 google_analytics: # Your Google Analytics tracking ID here
