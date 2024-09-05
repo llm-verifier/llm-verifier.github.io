@@ -34,6 +34,7 @@
             padding: 10px;
             margin: 10px 0;
             text-align: center;
+            transition: background-color 0.3s ease;
         }
         .arrow {
             text-align: center;
@@ -52,20 +53,29 @@
         .trajectory.transparent {
             opacity: 0.3;
         }
+        .highlight-red {
+            background-color: rgba(255, 0, 0, 0.2);
+        }
+        .highlight-yellow {
+            background-color: rgba(255, 255, 0, 0.2);
+        }
+        .highlight-green {
+            background-color: rgba(0, 255, 0, 0.2);
+        }
     </style>
 </head>
 <body>
     <h1>Medical Decision Trajectories</h1>
 
-    <p><strong>Problem:</strong> A 79-year-old man presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of 25 years of heavy smoking. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis?</p>
+    <p><strong>Problem:</strong> <span id="age-highlight">A 79-year-old man</span> presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of <span id="history-highlight">25 years of heavy smoking</span>. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis?</p>
 
     <div id="trajectory-container"></div>
 
     <script>
         const trajectories = {
             COPD: [
-                "Age: 79, Male",
-                "History: 25 years of heavy smoking",
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
+                { text: "History: 25 years of heavy smoking", highlightId: "history-highlight", colorClass: "highlight-yellow" },
                 "Symptom: Shortness of breath with moderate exertion",
                 "Symptom: Slightly productive cough",
                 "Exam: Increased resonance to percussion",
@@ -76,7 +86,7 @@
                 "Diagnosis: Chronic obstructive pulmonary disease (COPD)"
             ],
             Asthma: [
-                "Age: 79, Male",
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
                 "Symptom: Shortness of breath with moderate exertion",
                 "Symptom: Slightly productive cough",
                 "Exam: Decreased breath sounds",
@@ -85,7 +95,7 @@
                 "Diagnosis: Asthma"
             ],
             HeartFailure: [
-                "Age: 79, Male",
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
                 "Symptom: Shortness of breath with moderate exertion",
                 "Symptom: Slightly productive cough",
                 "Exam: Crackles at lung base",
@@ -93,7 +103,7 @@
                 "Diagnosis: Heart failure"
             ],
             Bronchiectasis: [
-                "Age: 79, Male",
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
                 "Symptom: Shortness of breath with moderate exertion",
                 "Symptom: Slightly productive cough",
                 "Exam: Crackles at lung base",
@@ -101,7 +111,7 @@
                 "Diagnosis: Bronchiectasis"
             ],
             LAM: [
-                "Age: 79, Male",
+                { text: "Age: 79, Male", highlightId: "age-highlight", colorClass: "highlight-red" },
                 "Symptom: Shortness of breath with moderate exertion",
                 "Symptom: Slightly productive cough",
                 "Exam: Decreased breath sounds",
@@ -111,11 +121,10 @@
             ]
         };
 
-
         function createTrajectory(name, steps) {
             const trajectoryDiv = document.createElement('div');
             trajectoryDiv.className = 'trajectory';
-            trajectoryDiv.setAttribute('data-name', name); // Add a data attribute for tracking
+            trajectoryDiv.setAttribute('data-name', name);
 
             const header = document.createElement('h2');
             header.textContent = name;
@@ -124,7 +133,7 @@
             steps.forEach((step, index) => {
                 const block = document.createElement('div');
                 block.className = 'block';
-                block.textContent = step;
+                block.textContent = typeof step === 'object' ? step.text : step;
                 trajectoryDiv.appendChild(block);
 
                 if (index < steps.length - 1) {
@@ -133,45 +142,35 @@
                     arrow.textContent = '↓';
                     trajectoryDiv.appendChild(arrow);
                 }
+
+                // Add highlight event
+                block.addEventListener('click', () => {
+                    selectBlock(step);
+                });
             });
 
-            const checkboxContainer = document.createElement('div');
-            checkboxContainer.className = 'checkbox-container';
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = `checkbox-${name}`;
-            const label = document.createElement('label');
-            label.htmlFor = `checkbox-${name}`;
-            label.textContent = 'Select this trajectory';
-            checkboxContainer.appendChild(checkbox);
-            checkboxContainer.appendChild(label);
-            trajectoryDiv.appendChild(checkboxContainer);
-
-            trajectoryDiv.addEventListener('click', () => selectTrajectory(trajectoryDiv)); // Add click event
-
             return trajectoryDiv;
+        }
+
+        function selectBlock(step) {
+            if (typeof step === 'object' && step.highlightId) {
+                // Reset all highlights
+                document.querySelectorAll('.highlight-red, .highlight-yellow, .highlight-green').forEach(el => {
+                    el.classList.remove('highlight-red', 'highlight-yellow', 'highlight-green');
+                });
+
+                // Apply highlight to the relevant part of the problem
+                const elementToHighlight = document.getElementById(step.highlightId);
+                elementToHighlight.classList.add(step.colorClass);
+            }
         }
 
         function displayTrajectories() {
             const container = document.getElementById('trajectory-container');
             for (const [name, steps] of Object.entries(trajectories)) {
-                const trajectoryElement = createTrajectory(name, steps
-                );
+                const trajectoryElement = createTrajectory(name, steps);
                 container.appendChild(trajectoryElement);
             }
-        }
-
-        function selectTrajectory(selectedDiv) {
-            const allTrajectories = document.querySelectorAll('.trajectory');
-            allTrajectories.forEach(trajectory => {
-                if (trajectory === selectedDiv) {
-                    trajectory.classList.add('selected');
-                    trajectory.classList.remove('transparent');
-                } else {
-                    trajectory.classList.add('transparent');
-                    trajectory.classList.remove('selected');
-                }
-            });
         }
 
         displayTrajectories();
