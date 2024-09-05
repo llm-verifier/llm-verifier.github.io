@@ -25,6 +25,7 @@
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
+            transition: opacity 0.3s ease;
         }
         .block {
             background-color: #FFD700;
@@ -42,6 +43,14 @@
         .checkbox-container {
             margin-top: 10px;
             text-align: center;
+        }
+        /* Add selected styles */
+        .trajectory.selected {
+            opacity: 1;
+        }
+        /* Add transparent styles */
+        .trajectory.transparent {
+            opacity: 0.3;
         }
     </style>
 </head>
@@ -99,6 +108,7 @@
         function createTrajectory(name, steps) {
             const trajectoryDiv = document.createElement('div');
             trajectoryDiv.className = 'trajectory';
+            trajectoryDiv.setAttribute('data-name', name); // Add a data attribute for tracking
 
             const header = document.createElement('h2');
             header.textContent = name;
@@ -130,15 +140,31 @@
             checkboxContainer.appendChild(label);
             trajectoryDiv.appendChild(checkboxContainer);
 
+            trajectoryDiv.addEventListener('click', () => selectTrajectory(trajectoryDiv)); // Add click event
+
             return trajectoryDiv;
         }
 
         function displayTrajectories() {
             const container = document.getElementById('trajectory-container');
             for (const [name, steps] of Object.entries(trajectories)) {
-                const trajectoryElement = createTrajectory(name, steps);
+                const trajectoryElement = createTrajectory(name, steps
+                );
                 container.appendChild(trajectoryElement);
             }
+        }
+
+        function selectTrajectory(selectedDiv) {
+            const allTrajectories = document.querySelectorAll('.trajectory');
+            allTrajectories.forEach(trajectory => {
+                if (trajectory === selectedDiv) {
+                    trajectory.classList.add('selected');
+                    trajectory.classList.remove('transparent');
+                } else {
+                    trajectory.classList.add('transparent');
+                    trajectory.classList.remove('selected');
+                }
+            });
         }
 
         displayTrajectories();
