@@ -130,7 +130,8 @@
             trajectoryDiv.appendChild(header);
 
             steps.forEach((step, index) => {
-                const block = document.createElement('div');
+                const block = document.createElement
+('div');
                 block.className = 'block';
                 block.textContent = typeof step === 'object' ? step.text : step;
                 trajectoryDiv.appendChild(block);
