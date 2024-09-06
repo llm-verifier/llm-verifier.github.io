@@ -1,58 +1,114 @@
----
-layout: default
-title: LLM Verifier
----
-
-<div class="main-content">
-  <h1>Medical Annotation Tool</h1>
-  <p class="subheader">The leading tool for clinicians to annotate on medical tasks with LLM.</p>
-
-  <div id="main-buttons">
-    <button onclick="window.location.href='annotation-tool.html'">LLM Reasoning</button>
-    <button onclick="window.location.href='trajectory-builder.html'">Medical Decision Makings</button>
-    <button onclick="window.location.href='patient-llm.html'">Patient-LLM</button>
-  </div>
-</div>
-
-<style>
-  body {
-    font-family: 'Open Sans', sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
-  }
-  
-  .main-content {
-    text-align: center;
-    margin-top: 100px;
-  }
-  
-  .subheader {
-    font-size: 20px;
-    color: #666;
-    margin-top: 10px;
-  }
-
-  #main-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 50px;
-  }
-  
-  button {
-    width: 300px;
-    padding: 15px;
-    margin: 20px;
-    font-size: 18px;
-    background-color: #ff6600;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #cc5200;
-  }
-
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Verifier - Medical Annotation Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .main-content {
+            text-align: center;
+            padding: 50px 20px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subheader {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 50px;
+        }
+        
+        #main-buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+        
+        .service-button {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .service-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+        
+        .service-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .service-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .service-button:hover .service-overlay {
+            opacity: 1;
+        }
+        
+        .service-title {
+            color: white;
+            font-size: 1.5em;
+            font-weight: 600;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <h1>Medical Annotation Tool</h1>
+        <p class="subheader">The leading tool for clinicians to annotate on medical tasks with LLM.</p>
+        <div id="main-buttons">
+            <a href="annotation-tool.html" class="service-button">
+                <img src="https://png.pngtree.com/png-vector/20230516/ourmid/pngtree-anxious-doctor-see-medical-report-and-thinking-confused-her-hand-in-vector-png-image_7099159.png" alt="LLM Reasoning">
+                <div class="service-overlay">
+                    <div class="service-title">LLM Reasoning</div>
+                </div>
+            </a>
+            <a href="trajectory-builder.html" class="service-button">
+                <img src="https://w7.pngwing.com/pngs/953/500/png-transparent-doctor-holding-paper-physician-information-patient-disease-the-doctor-writes-the-report-service-people-cross.png" alt="Medical Decision Makings">
+                <div class="service-overlay">
+                    <div class="service-title">Medical Decision Makings</div>
+                </div>
+            </a>
+            <a href="patient-llm.html" class="service-button">
+                <img src="https://img.freepik.com/premium-photo/doctor-supporting-patient_274689-3186.jpg" alt="Patient-LLM">
+                <div class="service-overlay">
+                    <div class="service-title">Patient-LLM</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
