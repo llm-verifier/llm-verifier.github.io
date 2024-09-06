@@ -37,6 +37,13 @@
             gap: 30px;
         }
         
+        .service-container {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
         .service-button {
             width: 300px;
             height: 300px;
@@ -64,7 +71,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -76,12 +83,17 @@
             opacity: 1;
         }
         
-        .service-title {
+        .service-description {
             color: white;
-            font-size: 1.5em;
-            font-weight: 600;
+            font-size: 1em;
             text-align: center;
             padding: 20px;
+        }
+        
+        .service-title {
+            margin-top: 15px;
+            font-size: 1.2em;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -90,24 +102,33 @@
         <h1>Medical Annotation Tool</h1>
         <p class="subheader">The leading tool for clinicians to annotate on medical tasks with LLM.</p>
         <div id="main-buttons">
-            <a href="annotation-tool.html" class="service-button">
-                <img src="https://img.freepik.com/premium-photo/female-doctor-xray-examination-diagnostics-hospital-professional_163305-177780.jpg" alt="LLM Reasoning">
-                <div class="service-overlay">
-                    <div class="service-title">LLM Reasoning</div>
-                </div>
-            </a>
-            <a href="trajectory-builder.html" class="service-button">
-                <img src="https://png.pngtree.com/png-vector/20240205/ourmid/pngtree-doctor-checking-the-pressure-png-image_11544654.png" alt="Medical Decision Makings">
-                <div class="service-overlay">
-                    <div class="service-title">Medical Decision Makings</div>
-                </div>
-            </a>
-            <a href="patient-llm.html" class="service-button">
-                <img src="https://media.istockphoto.com/id/1343539369/photo/patient-and-doctor-discussing-test-results.jpg?s=612x612&w=0&k=20&c=KXMx7_WDEDYTVJzrk7H-cSKvX9Jq95bt3LWS1Rz-1cU=" alt="Patient-LLM">
-                <div class="service-overlay">
-                    <div class="service-title">Patient-LLM</div>
-                </div>
-            </a>
+            <div class="service-container">
+                <a href="annotation-tool.html" class="service-button">
+                    <img src="https://img.freepik.com/premium-photo/female-doctor-xray-examination-diagnostics-hospital-professional_163305-177780.jpg" alt="LLM Reasoning">
+                    <div class="service-overlay">
+                        <div class="service-description">Annotating the LLM's reasoning with category assignment.</div>
+                    </div>
+                </a>
+                <div class="service-title">LLM Reasoning</div>
+            </div>
+            <div class="service-container">
+                <a href="trajectory-builder.html" class="service-button">
+                    <img src="https://png.pngtree.com/png-vector/20240205/ourmid/pngtree-doctor-checking-the-pressure-png-image_11544654.png" alt="Medical Decision Makings">
+                    <div class="service-overlay">
+                        <div class="service-description">Annotating medical decision making process.</div>
+                    </div>
+                </a>
+                <div class="service-title">Medical Decision Makings</div>
+            </div>
+            <div class="service-container">
+                <a href="patient-llm.html" class="service-button">
+                    <img src="https://media.istockphoto.com/id/1343539369/photo/patient-and-doctor-discussing-test-results.jpg?s=612x612&w=0&k=20&c=KXMx7_WDEDYTVJzrk7H-cSKvX9Jq95bt3LWS1Rz-1cU=" alt="Patient-LLM">
+                    <div class="service-overlay">
+                        <div class="service-description">Interacting with simulated patient powered by LLM.</div>
+                    </div>
+                </a>
+                <div class="service-title">Patient-LLM</div>
+            </div>
         </div>
     </div>
 </body>
