@@ -89,6 +89,26 @@
             border: 1px solid #ccc;
             border-radius: 10px;
         }
+        /* Progress Bar Styles */
+        .progress-bar {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 25px;
+            margin-bottom: 20px;
+        }
+        .progress-bar-fill {
+            height: 25px;
+            width: 0;
+            background-color: #4caf50;
+            border-radius: 25px;
+            transition: width 1s ease-in-out;
+        }
+        #decision-tree {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
@@ -111,6 +131,12 @@
 <div id="imagePreview"></div>
 
 <div id="summary"></div>
+
+<div class="progress-bar">
+    <div class="progress-bar-fill" id="progress-bar-fill"></div>
+</div>
+
+<div id="decision-tree"></div>
 
 <script>
     let conversationHistory = [
@@ -139,54 +165,54 @@
     async function sendMessage() {
         const userInput = document.getElementById('userInput').value;
         const chatbox = document.getElementById('chatbox');
-    
+
         if (!apiKey) {
             alert('Please enter your API key');
             return;
         }
-    
+
         if (!userInput.trim() && !imageFile) {
             return;
         }
-    
+
         const userMessage = document.createElement('div');
         userMessage.className = 'message user';
-    
+
         const userContent = document.createElement('div');
         userContent.className = 'message-content';
         userContent.textContent = userInput;
         userMessage.appendChild(userContent);
-    
+
         if (imageFile) {
             const imgElement = document.createElement('img');
             imgElement.src = URL.createObjectURL(imageFile);
             userMessage.appendChild(imgElement);
         }
-    
+
         chatbox.appendChild(userMessage);
         chatbox.scrollTop = chatbox.scrollHeight;
-    
+
         if (userInput.trim()) {
             conversationHistory.push({ role: "user", content: userInput });
         }
-    
+
         document.getElementById('userInput').value = '';
         document.getElementById('imagePreview').innerHTML = '';
-    
+
         // Check if the user doctor made the correct diagnosis
         if (userInput.toLowerCase().includes("copd")) {
             diagnosisMade = true;
             endConversation();
             return; // Stop further processing since the conversation should end
         }
-    
+
         // Increment the turn counter
         numTurns++;
-    
+
         if (userInput.trim() || imageBase64) {
             try {
                 let messages = [...conversationHistory];
-    
+
                 if (imageBase64) {
                     messages.push({
                         role: "user",
@@ -198,7 +224,7 @@
                 } else {
                     messages.push({ role: "user", content: userInput.trim() });
                 }
-    
+
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -206,43 +232,43 @@
                         'Authorization': `Bearer ${apiKey}`
                     },
                     body: JSON.stringify({
-                        model: "gpt-4-vision-preview",
+                        model: "gpt-4o-mini",
                         messages: messages,
                         max_tokens: 300
                     })
                 });
-    
+
                 const data = await response.json();
                 let botResponse = data.choices[0].message.content;
-    
+
                 // Check if the correct diagnosis was made in the bot's response
                 if (botResponse.toLowerCase().includes("copd")) {
                     diagnosisMade = true;
                     botResponse += "\nCorrect diagnosis made! Ending the conversation.";
                 }
-    
+
                 const botMessage = document.createElement('div');
                 botMessage.className = 'message bot';
-    
+
                 const icon = document.createElement('img');
                 icon.src = 'https://img.icons8.com/color/48/000000/patient-oxygen-mask.png';
                 icon.id = 'patient-icon';
-    
+
                 const botContent = document.createElement('div');
                 botContent.className = 'message-content';
                 botContent.textContent = botResponse;
-    
+
                 botMessage.appendChild(icon);
                 botMessage.appendChild(botContent);
                 chatbox.appendChild(botMessage);
                 chatbox.scrollTop = chatbox.scrollHeight;
-    
+
                 conversationHistory.push({ role: "assistant", content: botResponse });
-    
+
                 if (diagnosisMade || numTurns >= maxTurns) {
                     endConversation();
                 }
-    
+
                 // Reset image-related variables
                 imageFile = null;
                 imageBase64 = "";
@@ -252,7 +278,6 @@
             }
         }
     }
-
 
     function endConversation() {
         const summaryDiv = document.getElementById('summary');
@@ -276,10 +301,37 @@
             summaryDiv.appendChild(failureText);
         }
 
-        // Add a visualization placeholder (e.g., phi score, other statistics)
-        const visualization = document.createElement('div');
-        visualization.textContent = 'Visualizations would go here (e.g., score plots, coverage of patient details, etc.).';
-        summaryDiv.appendChild(visualization);
+        // Trigger the progress bar to fill
+        fillProgressBar();
+
+        // Display the decision-making process as a tree
+        displayDecisionTree();
+    }
+
+    function fillProgressBar() {
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        let width = 0;
+        const interval = setInterval(() => {
+            if (width >= 100) {
+                clearInterval(interval);
+            } else {
+                width++;
+                progressBarFill.style.width = width + '%';
+            }
+        }, 10); // Fills the bar in 1 second
+    }
+
+    function displayDecisionTree() {
+        const decisionTreeDiv = document.getElementById('decision-tree');
+        decisionTreeDiv.innerHTML = `
+            <h3>Doctor's Decision-Making Process</h3>
+            <ul>
+                <li>Step 1: Asked about symptoms (shortness of breath, cough).</li>
+                <li>Step 2: Collected lab results (spirometry, radiography).</li>
+                <li>Step 3: Analyzed the results (FEV1, FVC ratios).</li>
+                <li>Step 4: Diagnosed the condition as COPD.</li>
+            </ul>
+        `;
     }
 
     document.getElementById('apikeyBtn').addEventListener('click', function() {
