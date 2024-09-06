@@ -139,47 +139,54 @@
     async function sendMessage() {
         const userInput = document.getElementById('userInput').value;
         const chatbox = document.getElementById('chatbox');
-
+    
         if (!apiKey) {
             alert('Please enter your API key');
             return;
         }
-
+    
         if (!userInput.trim() && !imageFile) {
             return;
         }
-
+    
         const userMessage = document.createElement('div');
         userMessage.className = 'message user';
-
+    
         const userContent = document.createElement('div');
         userContent.className = 'message-content';
         userContent.textContent = userInput;
         userMessage.appendChild(userContent);
-
+    
         if (imageFile) {
             const imgElement = document.createElement('img');
             imgElement.src = URL.createObjectURL(imageFile);
             userMessage.appendChild(imgElement);
         }
-
+    
         chatbox.appendChild(userMessage);
         chatbox.scrollTop = chatbox.scrollHeight;
-
+    
         if (userInput.trim()) {
             conversationHistory.push({ role: "user", content: userInput });
         }
-
+    
         document.getElementById('userInput').value = '';
         document.getElementById('imagePreview').innerHTML = '';
-
+    
+        // Check if the user doctor made the correct diagnosis
+        if (userInput.toLowerCase().includes("copd")) {
+            diagnosisMade = true;
+            endConversation();
+            return; // Stop further processing since the conversation should end
+        }
+    
         // Increment the turn counter
         numTurns++;
-
+    
         if (userInput.trim() || imageBase64) {
             try {
                 let messages = [...conversationHistory];
-                
+    
                 if (imageBase64) {
                     messages.push({
                         role: "user",
@@ -191,7 +198,7 @@
                 } else {
                     messages.push({ role: "user", content: userInput.trim() });
                 }
-
+    
                 const response = await fetch('https://api.openai.com/v1/chat/completions', {
                     method: 'POST',
                     headers: {
@@ -204,38 +211,38 @@
                         max_tokens: 300
                     })
                 });
-
+    
                 const data = await response.json();
                 let botResponse = data.choices[0].message.content;
-
-                // Check if the correct diagnosis was made
-                if (botResponse.toLowerCase().includes(correctDiagnosis.toLowerCase())) {
+    
+                // Check if the correct diagnosis was made in the bot's response
+                if (botResponse.toLowerCase().includes("copd")) {
                     diagnosisMade = true;
                     botResponse += "\nCorrect diagnosis made! Ending the conversation.";
                 }
-
+    
                 const botMessage = document.createElement('div');
                 botMessage.className = 'message bot';
-
+    
                 const icon = document.createElement('img');
                 icon.src = 'https://img.icons8.com/color/48/000000/patient-oxygen-mask.png';
                 icon.id = 'patient-icon';
-
+    
                 const botContent = document.createElement('div');
                 botContent.className = 'message-content';
                 botContent.textContent = botResponse;
-
+    
                 botMessage.appendChild(icon);
                 botMessage.appendChild(botContent);
                 chatbox.appendChild(botMessage);
                 chatbox.scrollTop = chatbox.scrollHeight;
-
+    
                 conversationHistory.push({ role: "assistant", content: botResponse });
-
+    
                 if (diagnosisMade || numTurns >= maxTurns) {
                     endConversation();
                 }
-
+    
                 // Reset image-related variables
                 imageFile = null;
                 imageBase64 = "";
@@ -245,6 +252,7 @@
             }
         }
     }
+
 
     function endConversation() {
         const summaryDiv = document.getElementById('summary');
