@@ -74,6 +74,22 @@
             text-align: center;
             width: 80%;
         }
+        /* API key prompt styles */
+        #apiPrompt {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #apiForm {
+            text-align: center;
+        }
+        #apiForm input {
+            margin-right: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
         /* Score Indicator Styles */
         .score-container {
             position: relative;
@@ -86,7 +102,7 @@
             width: 150px;
             height: 150px;
             border-radius: 50%;
-            background: conic-gradient(red 0%, orange 50%, green 100%);
+            background: conic-gradient(black 0%, black 100%);
             position: relative;
             transform: rotate(-90deg);
         }
@@ -94,30 +110,39 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%) rotate(90deg);
             font-size: 24px;
             font-weight: bold;
+        }
+        .donut-chart {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: conic-gradient(green 0%, black 100%);
+            transform: rotate(-90deg);
         }
     </style>
 </head>
 <body>
 
-<h1>Patient-LLM</h1>
-
-<div id="apikey-section">
+<!-- Initial screen asking for API key -->
+<div id="apiPrompt">
     <div id="apiForm">
-        <input type="text" id="apikey" placeholder="Enter your OpenAI API Key">
+        <h2>Please enter your OpenAI API key to proceed:</h2>
+        <input type="text" id="apikey" placeholder="Enter API key">
         <button id="apikeyBtn">Submit</button>
     </div>
 </div>
 
-<div id="chatbox"></div>
-
-<textarea id="userInput" placeholder="Type your message..."></textarea>
-<img src="https://cdn-icons-png.freepik.com/512/74/74741.png" alt="Attach Image" class="attach-icon" id="attachBtn" width="30">
-<input type="file" id="imageInput" accept="image/*">
-
-<div id="imagePreview"></div>
+<!-- Chat interface (hidden initially) -->
+<div id="chatInterface" style="display:none;">
+    <h1>Patient-LLM</h1>
+    <div id="chatbox"></div>
+    <textarea id="userInput" placeholder="Type your message..."></textarea>
+    <img src="https://cdn-icons-png.freepik.com/512/74/74741.png" alt="Attach Image" class="attach-icon" id="attachBtn" width="30">
+    <input type="file" id="imageInput" accept="image/*">
+    <div id="imagePreview"></div>
+</div>
 
 <!-- Modal for Chat End Summary -->
 <div id="summaryModal" class="modal">
@@ -125,8 +150,8 @@
         <h2>Conversation Summary</h2>
         <p id="turnsText"></p>
         <p id="diagnosisText"></p>
-        
-        <!-- Score Circle -->
+
+        <!-- Score Donut -->
         <div class="score-container">
             <div class="score-circle">
                 <div class="score-fill" id="scoreFill">0</div>
@@ -134,7 +159,7 @@
         </div>
         
         <h3>Doctor's Decision-Making Process</h3>
-        <ul id="decisionTree"></ul>
+        <ul id="decisionTree" style="text-align:left;"></ul>
     </div>
 </div>
 
@@ -310,21 +335,23 @@
     function fillScoreIndicator() {
         const scoreFill = document.getElementById('scoreFill');
         let score = 0;
-        const maxScore = 999;
+        const maxScore = 100;
         const interval = setInterval(() => {
             if (score >= maxScore) {
                 clearInterval(interval);
             } else {
                 score++;
                 scoreFill.textContent = score;
+                document.querySelector('.score-circle').style.background = `conic-gradient(green ${score}%, black ${score}% 100%)`;
             }
-        }, 5); // Adjust the interval for faster/slower filling
+        }, 30); // Adjust the interval for faster/slower filling
     }
 
     document.getElementById('apikeyBtn').addEventListener('click', function() {
         apiKey = document.getElementById('apikey').value;
         if (apiKey) {
-            document.getElementById('apikey-section').style.display = 'none';
+            document.getElementById('apiPrompt').style.display = 'none';
+            document.getElementById('chatInterface').style.display = 'block';
         } else {
             alert('Please enter a valid API key.');
         }
