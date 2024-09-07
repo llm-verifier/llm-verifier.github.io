@@ -9,6 +9,9 @@ title: Medical Annotation Tool
   <h2>Medical Problem</h2>
   <p id="medical-problem"></p>
   
+  <h2>Options</h2>
+  <ul id="options"></ul>
+  
   <h2>LLM Reasoning</h2>
   <div id="llm-reasoning" contenteditable="true"></div>
   
@@ -20,20 +23,50 @@ title: Medical Annotation Tool
     <button onclick="handleAnnotation('correct')">Correct</button>
     <button onclick="handleComment()">Add Comment</button>
   </div>
+  
   <button onclick="handleSave()">Save Annotations</button>
+  
+  <div id="navigation-buttons">
+    <button id="prev-btn" onclick="prevProblem()">Previous</button>
+    <button id="next-btn" onclick="nextProblem()">Next</button>
+  </div>
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const problem = "A 79-year-old man presents to the office due to shortness of breath with moderate exertion and a slightly productive cough. He has a medical history of 25 years of heavy smoking. His vitals include: heart rate 89/min, respiratory rate 27/min, and blood pressure 120/90 mm Hg. The physical exam shows increased resonance to percussion, decreased breath sounds, and crackles at the lung base. Chest radiography shows signs of pulmonary hyperinflation. Spirometry shows a forced expiratory volume in the first second (FEV1) of 48%, a forced vital capacity (FVC) of 85%, and an FEV1/FVC ratio of 56%. According to these results, what is the most likely diagnosis?\n(A) Asthma (B) Lymphangioleiomyomatosis (C) Chronic obstructive pulmonary disease (COPD) (D) Bronchiectasis (E) Heart failure";
+  let problems = [];
+  let currentProblemIndex = 0;
+  let annotations = [];
+
+  // Load the JSONL file and parse each problem
+  async function loadProblems() {
+    const response = await fetch('test.jsonl'); // Assumes the JSONL file is hosted or accessible via a relative path
+    const text = await response.text();
+    problems = text.trim().split('\n').map(line => JSON.parse(line));
+    displayProblem(currentProblemIndex);
+  }
+
+  // Display the current problem and its options
+  function displayProblem(index) {
+    const problem = problems[index];
+    document.getElementById('medical-problem').textContent = problem.question;
+    const options = document.getElementById('options');
+    options.innerHTML = ''; // Clear previous options
     
-    const llmReasoning = "Based on the patient's symptoms and test results, the most likely diagnosis is Chronic Obstructive Pulmonary Disease (COPD). The patient's history of heavy smoking for 25 years is a significant risk factor for COPD. The shortness of breath with exertion and productive cough are classic symptoms. The physical exam findings of increased resonance to percussion and decreased breath sounds indicate air trapping, which is characteristic of COPD. The spirometry results show an FEV1/FVC ratio of 56%, which meets the criteria for COPD diagnosis. Additionally, the chest X-ray showing pulmonary hyperinflation is consistent with COPD. The crackles at the lung base suggest the presence of pneumonia, which is a common complication in COPD patients. The elevated respiratory rate of 27/min indicates that the patient is in respiratory distress, likely due to an acute exacerbation of COPD.";
+    Object.keys(problem.options).forEach(key => {
+      const optionItem = document.createElement('li');
+      optionItem.textContent = `${key}: ${problem.options[key]}`;
+      options.appendChild(optionItem);
+    });
+    
+    document.getElementById('llm-reasoning').textContent = generateLLMReasoning(problem); // This will use your LLM reasoning logic
+  }
 
-    // Display the problem and reasoning on the page
-    document.getElementById('medical-problem').textContent = problem;
-    document.getElementById('llm-reasoning').textContent = llmReasoning;
-  });
+  // Mock function to generate LLM Reasoning (replace with actual LLM output)
+  function generateLLMReasoning(problem) {
+    return `Based on the symptoms and options, the most likely answer is ${problem.answer}.`;
+  }
 
+  // Handle annotations (as in original version)
   const annotationStyles = {
     strikethrough: { style: 'text-decoration: line-through;', color: '#FF0000' },
     hallucination: { style: 'background-color: #FFA500;', color: '#FFA500' },
@@ -42,49 +75,29 @@ title: Medical Annotation Tool
     correct: { style: 'background-color: #90EE90;', color: '#90EE90' }
   };
 
-  let annotations = [];
-
   function getSelectionOffset() {
-    const reasoningText = document.getElementById('llm-reasoning').textContent; // Get the full text content
+    const reasoningText = document.getElementById('llm-reasoning').textContent;
     const selection = window.getSelection();
-    const selectedText = selection.toString(); // Get the selected text
-  
-    const start = reasoningText.indexOf(selectedText); // Find the starting index
-    const end = start + selectedText.length; // Calculate the end index
-  
+    const selectedText = selection.toString();
+    
+    const start = reasoningText.indexOf(selectedText);
+    const end = start + selectedText.length;
+    
     return { start, end, text: selectedText };
   }
-
 
   function handleAnnotation(type) {
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
-  
+
     const range = selection.getRangeAt(0);
     const span = document.createElement('span');
     span.style = annotationStyles[type].style;
     span.className = `annotation ${type}`;
     range.surroundContents(span);
-  
-    // Get the start and end positions of the selection using the revised function
+
     const { start, end, text } = getSelectionOffset();
-  
-    // Push the annotation with accurate positions
     annotations.push({ category: type, start, end, text });
-  }
-
-
-  function getNodeOffset(node, offset) {
-    let chars = 0;
-    while (node && node !== document.getElementById('llm-reasoning')) {
-      if (node.previousSibling) {
-        node = node.previousSibling;
-        chars += node.textContent.length;
-      } else {
-        node = node.parentNode;
-      }
-    }
-    return chars + offset;
   }
 
   function handleComment() {
@@ -102,7 +115,6 @@ title: Medical Annotation Tool
 
       const start = getNodeOffset(range.startContainer, range.startOffset);
       const end = getNodeOffset(range.endContainer, range.endOffset);
-
       annotations.push({ category: 'comment', start, end, text: range.toString(), comment });
     }
   }
@@ -118,16 +130,33 @@ title: Medical Annotation Tool
     };
 
     const jsonData = JSON.stringify(annotationData, null, 2);
-    
-    // Create a blob for the JSON file and trigger a download
+
     const blob = new Blob([jsonData], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'annotations.json';
+    link.download = `annotations_problem_${currentProblemIndex + 1}.json`;
     link.click();
   }
-</script>
 
+  // Navigation functions
+  function prevProblem() {
+    if (currentProblemIndex > 0) {
+      currentProblemIndex--;
+      displayProblem(currentProblemIndex);
+    }
+  }
+
+  function nextProblem() {
+    if (currentProblemIndex < problems.length - 1) {
+      currentProblemIndex++;
+      displayProblem(currentProblemIndex);
+    }
+  }
+
+  // Initialize by loading problems
+  loadProblems();
+
+</script>
 
 <style>
   #annotation-container {
@@ -154,5 +183,8 @@ title: Medical Annotation Tool
     text-decoration: underline;
     text-decoration-style: wavy;
     text-decoration-color: #00FFFF;
+  }
+  #navigation-buttons {
+    margin-top: 20px;
   }
 </style>
