@@ -1,7 +1,44 @@
----
-layout: default
-title: Medical Annotation Tool
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Annotation Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .problem-block {
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .llm-reasoning {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        button {
+            margin-right: 10px;
+            margin-bottom: 5px;
+        }
+        .annotation {
+            padding: 2px 0;
+        }
+        .comment {
+            text-decoration: underline;
+            text-decoration-style: wavy;
+            text-decoration-color: #00FFFF;
+        }
+    </style>
+</head>
+<body>
 
 <h1>Medical Annotation Tool</h1>
 
@@ -9,13 +46,14 @@ title: Medical Annotation Tool
 <div id="apiPrompt">
     <div id="apiForm">
         <h2>Please enter your OpenAI API key to proceed:</h2>
-        <input type="text" id="apikey" placeholder="Enter API key">
+        <input type="text" id="apikey" placeholder="Enter API key" />
         <button id="apikeyBtn">Submit</button>
+        <p id="apiError" style="color: red;" class="hidden">Please enter a valid API key.</p>
     </div>
 </div>
 
 <!-- Problems and Annotations (hidden initially) -->
-<div id="annotation-tool" style="display:none;">
+<div id="annotation-tool" class="hidden">
     <div id="problems-container"></div>
     <button onclick="handleSaveAll()">Save All Annotations</button>
 </div>
@@ -28,15 +66,18 @@ let apiKey = "";
 
 // Handle API key submission
 document.getElementById('apikeyBtn').addEventListener('click', function() {
-    apiKey = document.getElementById('apikey').value;
-    console.log('API Key entered:', apiKey);
+    apiKey = document.getElementById('apikey').value.trim();
+    const apiError = document.getElementById('apiError');
 
     if (apiKey) {
+        // Hide error and proceed
+        apiError.classList.add('hidden');
         document.getElementById('apiPrompt').style.display = 'none';
-        document.getElementById('annotation-tool').style.display = 'block';
+        document.getElementById('annotation-tool').classList.remove('hidden');
         loadProblems();
     } else {
-        alert('Please enter a valid API key.');
+        // Show error if the API key is not valid
+        apiError.classList.remove('hidden');
     }
 });
 
@@ -56,7 +97,6 @@ async function loadProblems() {
 
 // Display all problems on the page
 function displayProblems() {
-    console.log('Displaying problems...');
     const problemsContainer = document.getElementById('problems-container');
     problemsContainer.innerHTML = ''; // Clear previous content
     
@@ -71,7 +111,7 @@ function displayProblems() {
               ${Object.keys(problem.options).map(key => `<li>${key}: ${problem.options[key]}</li>`).join('')}
             </ul>
             <h3>LLM Reasoning</h3>
-            <div id="llm-reasoning-${problem.index}" class="llm-reasoning" contenteditable="true">Loading reasoning...</div>
+            <div id="llm-reasoning-${problem.index}" class="llm-reasoning">Loading reasoning...</div>
             <div id="annotation-buttons-${problem.index}">
               <button onclick="handleAnnotation(${problem.index}, 'strikethrough')">Strikethrough</button>
               <button onclick="handleAnnotation(${problem.index}, 'hallucination')">Hallucination</button>
@@ -88,7 +128,7 @@ function displayProblems() {
     });
 }
 
-// Function to generate LLM reasoning (this integrates with the GPT-4o-mini model)
+// Function to generate LLM reasoning using the GPT-4o-mini model
 async function generateLLMReasoning(problem, apiKey, index) {
     const apiUrl = "https://api.openai.com/v1/completions";
     const headers = {
@@ -99,7 +139,7 @@ async function generateLLMReasoning(problem, apiKey, index) {
     const body = JSON.stringify({
         model: "gpt-4o-mini",
         prompt: `Problem: ${problem.question}\nAnswer: ${problem.answer}\nGenerate a detailed reasoning that supports this answer.`,
-        max_tokens: 300 // Adjusted token limit to allow for more detailed reasoning.
+        max_tokens: 150
     });
 
     try {
@@ -114,15 +154,14 @@ async function generateLLMReasoning(problem, apiKey, index) {
         }
 
         const data = await response.json();
-        console.log('Received response for problem', index); // Debugging: Check if API response is received
         document.getElementById(`llm-reasoning-${index}`).textContent = data.choices[0].text.trim();
     } catch (error) {
-        console.error(`Error generating reasoning for problem ${index}:`, error); // Debugging: Log error if reasoning fails
+        console.error(`Error generating reasoning for problem ${index}:`, error);
         document.getElementById(`llm-reasoning-${index}`).textContent = "Error generating reasoning.";
     }
 }
 
-// Annotation handling
+// Annotation handling functions
 const annotationStyles = {
     strikethrough: { style: 'text-decoration: line-through;', color: '#FF0000' },
     hallucination: { style: 'background-color: #FFA500;', color: '#FFA500' },
@@ -195,27 +234,5 @@ function handleSaveAll() {
 }
 </script>
 
-<style>
-  .problem-block {
-    border-bottom: 1px solid #ccc;
-    margin-bottom: 20px;
-  }
-  .llm-reasoning {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 10px;
-    line-height: 1.6;
-  }
-  button {
-    margin-right: 10px;
-    margin-bottom: 5px;
-  }
-  .annotation {
-    padding: 2px 0;
-  }
-  .comment {
-    text-decoration: underline;
-    text-decoration-style: wavy;
-    text-decoration-color: #00FFFF;
-  }
-</style>
+</body>
+</html>
