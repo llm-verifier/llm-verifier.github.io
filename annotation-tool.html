@@ -26,28 +26,39 @@ let problems = [];
 let annotations = [];
 let apiKey = "";
 
-// Handle API key submission
+// Debugging: Ensure this block runs after clicking the API key button
 document.getElementById('apikeyBtn').addEventListener('click', function() {
     apiKey = document.getElementById('apikey').value;
+    console.log('API Key entered:', apiKey); // Debugging: Check if the API key is captured
+
     if (apiKey) {
+        console.log('Valid API key, proceeding to show annotation tool.');
         document.getElementById('apiPrompt').style.display = 'none';
         document.getElementById('annotation-tool').style.display = 'block';
         loadProblems();
     } else {
         alert('Please enter a valid API key.');
+        console.log('No API key provided, stopping.');
     }
 });
 
 // Load JSONL file and display problems
 async function loadProblems() {
-    const response = await fetch('test.jsonl'); // Assumes the JSONL file is hosted or accessible via a relative path
-    const text = await response.text();
-    problems = text.trim().split('\n').map((line, index) => ({ ...JSON.parse(line), index }));
-    displayProblems();
+    console.log('Loading problems...'); // Debugging: Ensure problem loading starts
+    try {
+        const response = await fetch('test.jsonl'); // Assumes the JSONL file is hosted or accessible via a relative path
+        const text = await response.text();
+        problems = text.trim().split('\n').map((line, index) => ({ ...JSON.parse(line), index }));
+        displayProblems();
+    } catch (error) {
+        console.error('Error loading problems:', error); // Debugging: Log errors
+        alert('Failed to load problems. Please check the JSONL file.');
+    }
 }
 
 // Display all problems on the page
 function displayProblems() {
+    console.log('Displaying problems...'); // Debugging: Ensure problems are displayed
     const problemsContainer = document.getElementById('problems-container');
     problemsContainer.innerHTML = ''; // Clear previous content
     
@@ -99,84 +110,18 @@ async function generateLLMReasoning(problem, apiKey, index) {
             headers: headers,
             body: body
         });
-    
+
+        if (!response.ok) {
+            throw new Error('OpenAI API request failed');
+        }
+
         const data = await response.json();
+        console.log('Received response for problem', index); // Debugging: Check if API response is received
         document.getElementById(`llm-reasoning-${index}`).textContent = data.choices[0].text.trim();
     } catch (error) {
+        console.error(`Error generating reasoning for problem ${index}:`, error); // Debugging: Log error if reasoning fails
         document.getElementById(`llm-reasoning-${index}`).textContent = "Error generating reasoning.";
     }
-}
-
-// Annotation handling
-const annotationStyles = {
-    strikethrough: { style: 'text-decoration: line-through;', color: '#FF0000' },
-    hallucination: { style: 'background-color: #FFA500;', color: '#FFA500' },
-    overinterpretation: { style: 'background-color: '#FFFF00;', color: '#FFFF00' },
-    misdiagnosis: { style: 'background-color: '#FF69B4;', color: '#FF69B4' },
-    correct: { style: 'background-color: '#90EE90;', color: '#90EE90' }
-};
-
-function handleAnnotation(problemIndex, type) {
-    const reasoningDiv = document.getElementById(`llm-reasoning-${problemIndex}`);
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-
-    const range = selection.getRangeAt(0);
-    const span = document.createElement('span');
-    span.style = annotationStyles[type].style;
-    span.className = `annotation ${type}`;
-    range.surroundContents(span);
-
-    const { start, end, text } = getSelectionOffset(reasoningDiv);
-    annotations.push({ problemIndex, category: type, start, end, text });
-}
-
-function handleComment(problemIndex) {
-    const reasoningDiv = document.getElementById(`llm-reasoning-${problemIndex}`);
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-
-    const range = selection.getRangeAt(0);
-    const comment = prompt("Enter your comment:");
-    if (comment) {
-        const span = document.createElement('span');
-        span.style.backgroundColor = '#00FFFF';
-        span.className = 'annotation comment';
-        span.title = comment;
-        range.surroundContents(span);
-
-        const { start, end, text } = getSelectionOffset(reasoningDiv);
-        annotations.push({ problemIndex, category: 'comment', start, end, text, comment });
-    }
-}
-
-function getSelectionOffset(container) {
-    const reasoningText = container.textContent;
-    const selection = window.getSelection();
-    const selectedText = selection.toString();
-  
-    const start = reasoningText.indexOf(selectedText);
-    const end = start + selectedText.length;
-  
-    return { start, end, text: selectedText };
-}
-
-// Save all annotations
-function handleSaveAll() {
-    const annotationData = {
-        problems: problems.map((problem, index) => ({
-            question: problem.question,
-            reasoning: document.getElementById(`llm-reasoning-${index}`).textContent,
-            annotations: annotations.filter(a => a.problemIndex === index)
-        }))
-    };
-
-    const jsonData = JSON.stringify(annotationData, null, 2);
-    const blob = new Blob([jsonData], { type: 'application/json' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'all_annotations.json';
-    link.click();
 }
 </script>
 
