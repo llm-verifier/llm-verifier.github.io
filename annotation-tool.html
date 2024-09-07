@@ -26,7 +26,7 @@ let problems = [];
 let annotations = [];
 let apiKey = "";
 
-// Handle API key submission (this is based on your provided code)
+// Handle API key submission
 document.getElementById('apikeyBtn').addEventListener('click', function() {
     apiKey = document.getElementById('apikey').value;
     if (apiKey) {
@@ -63,6 +63,14 @@ function displayProblems() {
             </ul>
             <h3>LLM Reasoning</h3>
             <div id="llm-reasoning-${problem.index}" class="llm-reasoning" contenteditable="true">Loading reasoning...</div>
+            <div id="annotation-buttons-${problem.index}">
+              <button onclick="handleAnnotation(${problem.index}, 'strikethrough')">Strikethrough</button>
+              <button onclick="handleAnnotation(${problem.index}, 'hallucination')">Hallucination</button>
+              <button onclick="handleAnnotation(${problem.index}, 'overinterpretation')">Overinterpretation</button>
+              <button onclick="handleAnnotation(${problem.index}, 'misdiagnosis')">Misdiagnosis</button>
+              <button onclick="handleAnnotation(${problem.index}, 'correct')">Correct</button>
+              <button onclick="handleComment(${problem.index})">Add Comment</button>
+            </div>
         `;
         problemsContainer.appendChild(problemDiv);
         
@@ -81,7 +89,7 @@ async function generateLLMReasoning(problem, apiKey, index) {
 
     const body = JSON.stringify({
         model: "gpt-4o-mini",
-        prompt: `Question: ${problem.question}\nOptions: ${Object.values(problem.options).join(', ')}\nAnswer: ${problem.answer}\nExplain the reasoning.`,
+        prompt: `Problem: ${problem.question}\nAnswer: ${problem.answer}\nGenerate a detailed reasoning that supports this answer.`,
         max_tokens: 150
     });
 
@@ -98,11 +106,101 @@ async function generateLLMReasoning(problem, apiKey, index) {
         document.getElementById(`llm-reasoning-${index}`).textContent = "Error generating reasoning.";
     }
 }
+
+// Annotation handling
+const annotationStyles = {
+    strikethrough: { style: 'text-decoration: line-through;', color: '#FF0000' },
+    hallucination: { style: 'background-color: #FFA500;', color: '#FFA500' },
+    overinterpretation: { style: 'background-color: '#FFFF00;', color: '#FFFF00' },
+    misdiagnosis: { style: 'background-color: '#FF69B4;', color: '#FF69B4' },
+    correct: { style: 'background-color: '#90EE90;', color: '#90EE90' }
+};
+
+function handleAnnotation(problemIndex, type) {
+    const reasoningDiv = document.getElementById(`llm-reasoning-${problemIndex}`);
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const span = document.createElement('span');
+    span.style = annotationStyles[type].style;
+    span.className = `annotation ${type}`;
+    range.surroundContents(span);
+
+    const { start, end, text } = getSelectionOffset(reasoningDiv);
+    annotations.push({ problemIndex, category: type, start, end, text });
+}
+
+function handleComment(problemIndex) {
+    const reasoningDiv = document.getElementById(`llm-reasoning-${problemIndex}`);
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const comment = prompt("Enter your comment:");
+    if (comment) {
+        const span = document.createElement('span');
+        span.style.backgroundColor = '#00FFFF';
+        span.className = 'annotation comment';
+        span.title = comment;
+        range.surroundContents(span);
+
+        const { start, end, text } = getSelectionOffset(reasoningDiv);
+        annotations.push({ problemIndex, category: 'comment', start, end, text, comment });
+    }
+}
+
+function getSelectionOffset(container) {
+    const reasoningText = container.textContent;
+    const selection = window.getSelection();
+    const selectedText = selection.toString();
+  
+    const start = reasoningText.indexOf(selectedText);
+    const end = start + selectedText.length;
+  
+    return { start, end, text: selectedText };
+}
+
+// Save all annotations
+function handleSaveAll() {
+    const annotationData = {
+        problems: problems.map((problem, index) => ({
+            question: problem.question,
+            reasoning: document.getElementById(`llm-reasoning-${index}`).textContent,
+            annotations: annotations.filter(a => a.problemIndex === index)
+        }))
+    };
+
+    const jsonData = JSON.stringify(annotationData, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'all_annotations.json';
+    link.click();
+}
 </script>
 
 <style>
   .problem-block {
     border-bottom: 1px solid #ccc;
     margin-bottom: 20px;
+  }
+  .llm-reasoning {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+  button {
+    margin-right: 10px;
+    margin-bottom: 5px;
+  }
+  .annotation {
+    padding: 2px 0;
+  }
+  .comment {
+    text-decoration: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: #00FFFF;
   }
 </style>
