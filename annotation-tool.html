@@ -111,7 +111,15 @@
         try {
             const response = await fetch('test.jsonl');
             const text = await response.text();
-            problems = text.trim().split('\n').map((line, index) => ({ ...JSON.parse(line), index }));
+            problems = text.trim().split('\n').map((line, index) => {
+                const problem = JSON.parse(line);
+                return { 
+                    ...problem, 
+                    index,
+                    options: problem.options || {},
+                    label: problem.answer // Assuming the correct answer is stored in the 'answer' field
+                };
+            });
             displayProblems();
         } catch (error) {
             console.error('Error loading problems:', error);
@@ -131,8 +139,9 @@
                 <p>${problem.question}</p>
                 <h3>Options</h3>
                 <ul>
-                  ${Object.keys(problem.options).map(key => `<li>${key}: ${problem.options[key]}</li>`).join('')}
+                  ${Object.entries(problem.options).map(([key, value]) => `<li>${key}: ${value}</li>`).join('')}
                 </ul>
+                <p><strong>Correct Answer:</strong> ${problem.label}</p>
                 <h3>LLM Reasoning</h3>
                 <div id="llm-reasoning-${problem.index}" class="llm-reasoning" contenteditable="true">Loading reasoning...</div>
                 <div id="annotation-buttons-${problem.index}">
@@ -161,7 +170,7 @@
             model: "gpt-3.5-turbo",
             messages: [
                 {"role": "system", "content": "You are a medical expert providing reasoning for diagnostic questions."},
-                {"role": "user", "content": `Problem: ${problem.question}\nAnswer: ${problem.answer}\nGenerate a detailed reasoning that supports this answer.`}
+                {"role": "user", "content": `Problem: ${problem.question}\nAnswer: ${problem.label}\nGenerate a detailed reasoning that supports this answer.`}
             ],
             max_tokens: 150
         });
@@ -261,6 +270,8 @@
             const reasoningDiv = document.getElementById(`llm-reasoning-${problem.index}`);
             return {
                 input: problem.question,
+                options: problem.options,
+                label: problem.label,
                 output: reasoningDiv.textContent,
                 annotations: annotations[problem.index] || []
             };
