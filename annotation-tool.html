@@ -5,19 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Medical Annotation Tool</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
         .problem-block {
-            border-bottom: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
             margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         .llm-reasoning {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
             line-height: 1.6;
+            background-color: #f9f9f9;
         }
         button {
-            margin-right: 10px;
-            margin-bottom: 5px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
         }
         .annotation {
             padding: 2px 0;
@@ -32,6 +58,19 @@
         .overinterpretation { background-color: #FFFFCC; }
         .misdiagnosis { background-color: #FFD700; }
         .correct { background-color: #90EE90; }
+        #apiPrompt {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #apikey {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -53,28 +92,22 @@
     </div>
 
     <script>
-    // Variables to store problems and annotations
     let problems = [];
-    let annotations = [];
+    let annotations = {};
     let apiKey = "";
 
     document.getElementById('apikeyBtn').addEventListener('click', function() {
         apiKey = document.getElementById('apikey').value;
-        console.log('API Key entered:', apiKey);
-
         if (apiKey) {
-            console.log('Valid API key, proceeding to show annotation tool.');
             document.getElementById('apiPrompt').style.display = 'none';
             document.getElementById('annotation-tool').style.display = 'block';
             loadProblems();
         } else {
             alert('Please enter a valid API key.');
-            console.log('No API key provided, stopping.');
         }
     });
 
     async function loadProblems() {
-        console.log('Loading problems...');
         try {
             const response = await fetch('test.jsonl');
             const text = await response.text();
@@ -87,7 +120,6 @@
     }
 
     function displayProblems() {
-        console.log('Displaying problems...');
         const problemsContainer = document.getElementById('problems-container');
         problemsContainer.innerHTML = '';
         
@@ -146,7 +178,6 @@
             }
 
             const data = await response.json();
-            console.log('Received response for problem', index);
             document.getElementById(`llm-reasoning-${index}`).textContent = data.choices[0].message.content.trim();
         } catch (error) {
             console.error(`Error generating reasoning for problem ${index}:`, error);
@@ -169,6 +200,17 @@
                 
                 range.deleteContents();
                 range.insertNode(span);
+                
+                // Add annotation to the annotations object
+                if (!annotations[problemIndex]) {
+                    annotations[problemIndex] = [];
+                }
+                annotations[problemIndex].push({
+                    category: annotationType,
+                    start: range.startOffset,
+                    end: range.endOffset,
+                    text: selectedText
+                });
                 
                 // Clear the selection
                 selection.removeAllRanges();
@@ -195,6 +237,18 @@
                     range.deleteContents();
                     range.insertNode(span);
                     
+                    // Add comment to the annotations object
+                    if (!annotations[problemIndex]) {
+                        annotations[problemIndex] = [];
+                    }
+                    annotations[problemIndex].push({
+                        category: 'comment',
+                        start: range.startOffset,
+                        end: range.endOffset,
+                        text: selectedText,
+                        comment: comment
+                    });
+                    
                     // Clear the selection
                     selection.removeAllRanges();
                 }
@@ -206,8 +260,9 @@
         const annotatedData = problems.map(problem => {
             const reasoningDiv = document.getElementById(`llm-reasoning-${problem.index}`);
             return {
-                ...problem,
-                annotatedReasoning: reasoningDiv.innerHTML
+                input: problem.question,
+                output: reasoningDiv.textContent,
+                annotations: annotations[problem.index] || []
             };
         });
         
