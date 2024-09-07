@@ -6,206 +6,101 @@ title: Medical Annotation Tool
 <h1>Medical Annotation Tool</h1>
 
 <!-- Step 1: API Key Input -->
-<div id="api-key-container">
-  <h2>Enter OpenAI API Key</h2>
-  <input type="text" id="api-key" placeholder="Enter your OpenAI API Key">
-  <button onclick="generateLLMReasoningForAll()">Generate LLM Reasoning</button>
+<div id="apiPrompt">
+    <div id="apiForm">
+        <h2>Please enter your OpenAI API key to proceed:</h2>
+        <input type="text" id="apikey" placeholder="Enter API key">
+        <button id="apikeyBtn">Submit</button>
+    </div>
 </div>
 
-<!-- Step 2: Problems Display -->
-<div id="problems-container"></div>
-
-<!-- Save Annotations Button -->
-<button onclick="handleSaveAll()">Save All Annotations</button>
+<!-- Problems and Annotations (hidden initially) -->
+<div id="annotation-tool" style="display:none;">
+    <div id="problems-container"></div>
+    <button onclick="handleSaveAll()">Save All Annotations</button>
+</div>
 
 <script>
-// Variables to store the problems and annotations
+// Variables to store problems and annotations
 let problems = [];
 let annotations = [];
+let apiKey = "";
 
-// Load the JSONL file and parse the problems
+// Handle API key submission (this is based on your provided code)
+document.getElementById('apikeyBtn').addEventListener('click', function() {
+    apiKey = document.getElementById('apikey').value;
+    if (apiKey) {
+        document.getElementById('apiPrompt').style.display = 'none';
+        document.getElementById('annotation-tool').style.display = 'block';
+        loadProblems();
+    } else {
+        alert('Please enter a valid API key.');
+    }
+});
+
+// Load JSONL file and display problems
 async function loadProblems() {
-  const response = await fetch('test.jsonl'); // Assumes the JSONL file is hosted or accessible via a relative path
-  const text = await response.text();
-  problems = text.trim().split('\n').map((line, index) => ({ ...JSON.parse(line), index }));
-  displayProblems();
+    const response = await fetch('test.jsonl'); // Assumes the JSONL file is hosted or accessible via a relative path
+    const text = await response.text();
+    problems = text.trim().split('\n').map((line, index) => ({ ...JSON.parse(line), index }));
+    displayProblems();
 }
 
-// Function to display all problems on the page
+// Display all problems on the page
 function displayProblems() {
-  const problemsContainer = document.getElementById('problems-container');
-  problemsContainer.innerHTML = ''; // Clear previous content
-  
-  problems.forEach(problem => {
-    const problemDiv = document.createElement('div');
-    problemDiv.classList.add('problem-block');
-    problemDiv.innerHTML = `
-      <h2>Problem ${problem.index + 1}</h2>
-      <p>${problem.question}</p>
-      <h3>Options</h3>
-      <ul>
-        ${Object.keys(problem.options).map(key => `<li>${key}: ${problem.options[key]}</li>`).join('')}
-      </ul>
-      <h3>LLM Reasoning</h3>
-      <div id="llm-reasoning-${problem.index}" class="llm-reasoning" contenteditable="true">Loading reasoning...</div>
-      <div id="annotation-buttons-${problem.index}">
-        <button onclick="handleAnnotation(${problem.index}, 'strikethrough')">Strikethrough</button>
-        <button onclick="handleAnnotation(${problem.index}, 'hallucination')">Hallucination</button>
-        <button onclick="handleAnnotation(${problem.index}, 'overinterpretation')">Overinterpretation</button>
-        <button onclick="handleAnnotation(${problem.index}, 'misdiagnosis')">Misdiagnosis</button>
-        <button onclick="handleAnnotation(${problem.index}, 'correct')">Correct</button>
-        <button onclick="handleComment(${problem.index})">Add Comment</button>
-      </div>
-    `;
-    problemsContainer.appendChild(problemDiv);
-  });
-}
-
-// Use OpenAI API to generate reasoning for all problems
-async function generateLLMReasoningForAll() {
-  const apiKey = document.getElementById('api-key').value;
-  if (!apiKey) {
-    alert("Please enter your OpenAI API Key.");
-    return;
-  }
-  
-  for (let i = 0; i < problems.length; i++) {
-    const problem = problems[i];
-    const reasoningDiv = document.getElementById(`llm-reasoning-${i}`);
-    reasoningDiv.textContent = 'Generating reasoning...';
+    const problemsContainer = document.getElementById('problems-container');
+    problemsContainer.innerHTML = ''; // Clear previous content
     
-    const reasoning = await generateLLMReasoning(problem, apiKey);
-    reasoningDiv.textContent = reasoning;
-  }
-}
-
-// Function to call OpenAI API and generate reasoning for a single problem
-async function generateLLMReasoning(problem, apiKey) {
-  const apiUrl = "https://api.openai.com/v1/completions";
-  const headers = {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${apiKey}`
-  };
-  
-  const body = JSON.stringify({
-    model: "gpt-4o-mini",
-    prompt: `Question: ${problem.question}\nOptions: ${Object.values(problem.options).join(', ')}\nAnswer: ${problem.answer}\nExplain the reasoning.`,
-    max_tokens: 150
-  });
-
-  try {
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: headers,
-      body: body
+    problems.forEach(problem => {
+        const problemDiv = document.createElement('div');
+        problemDiv.classList.add('problem-block');
+        problemDiv.innerHTML = `
+            <h2>Problem ${problem.index + 1}</h2>
+            <p>${problem.question}</p>
+            <h3>Options</h3>
+            <ul>
+              ${Object.keys(problem.options).map(key => `<li>${key}: ${problem.options[key]}</li>`).join('')}
+            </ul>
+            <h3>LLM Reasoning</h3>
+            <div id="llm-reasoning-${problem.index}" class="llm-reasoning" contenteditable="true">Loading reasoning...</div>
+        `;
+        problemsContainer.appendChild(problemDiv);
+        
+        // Generate LLM Reasoning for each problem
+        generateLLMReasoning(problem, apiKey, problem.index);
     });
+}
+
+// Function to generate LLM reasoning (this integrates with the GPT-4o-mini model)
+async function generateLLMReasoning(problem, apiKey, index) {
+    const apiUrl = "https://api.openai.com/v1/completions";
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+    };
+
+    const body = JSON.stringify({
+        model: "gpt-4o-mini",
+        prompt: `Question: ${problem.question}\nOptions: ${Object.values(problem.options).join(', ')}\nAnswer: ${problem.answer}\nExplain the reasoning.`,
+        max_tokens: 150
+    });
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: headers,
+            body: body
+        });
     
-    const data = await response.json();
-    return data.choices[0].text.trim();
-  } catch (error) {
-    return "Error generating reasoning.";
-  }
+        const data = await response.json();
+        document.getElementById(`llm-reasoning-${index}`).textContent = data.choices[0].text.trim();
+    } catch (error) {
+        document.getElementById(`llm-reasoning-${index}`).textContent = "Error generating reasoning.";
+    }
 }
-
-// Handle annotations (as in original version)
-const annotationStyles = {
-  strikethrough: { style: 'text-decoration: line-through;', color: '#FF0000' },
-  hallucination: { style: 'background-color: #FFA500;', color: '#FFA500' },
-  overinterpretation: { style: 'background-color: #FFFF00;', color: '#FFFF00' },
-  misdiagnosis: { style: 'background-color: '#FF69B4;', color: '#FF69B4' },
-  correct: { style: 'background-color: '#90EE90;', color: '#90EE90' }
-};
-
-function handleAnnotation(problemIndex, type) {
-  const reasoningDiv = document.getElementById(`llm-reasoning-${problemIndex}`);
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
-
-  const range = selection.getRangeAt(0);
-  const span = document.createElement('span');
-  span.style = annotationStyles[type].style;
-  span.className = `annotation ${type}`;
-  range.surroundContents(span);
-
-  const { start, end, text } = getSelectionOffset(reasoningDiv);
-  annotations.push({ problemIndex, category: type, start, end, text });
-}
-
-function handleComment(problemIndex) {
-  const reasoningDiv = document.getElementById(`llm-reasoning-${problemIndex}`);
-  const selection = window.getSelection();
-  if (!selection.rangeCount) return;
-
-  const range = selection.getRangeAt(0);
-  const comment = prompt("Enter your comment:");
-  if (comment) {
-    const span = document.createElement('span');
-    span.style.backgroundColor = '#00FFFF';
-    span.className = 'annotation comment';
-    span.title = comment;
-    range.surroundContents(span);
-
-    const { start, end, text } = getSelectionOffset(reasoningDiv);
-    annotations.push({ problemIndex, category: 'comment', start, end, text, comment });
-  }
-}
-
-function getSelectionOffset(container) {
-  const reasoningText = container.textContent;
-  const selection = window.getSelection();
-  const selectedText = selection.toString();
-  
-  const start = reasoningText.indexOf(selectedText);
-  const end = start + selectedText.length;
-  
-  return { start, end, text: selectedText };
-}
-
-// Save all annotations at once
-function handleSaveAll() {
-  const annotationData = {
-    problems: problems.map((problem, index) => ({
-      question: problem.question,
-      reasoning: document.getElementById(`llm-reasoning-${index}`).textContent,
-      annotations: annotations.filter(a => a.problemIndex === index)
-    }))
-  };
-
-  const jsonData = JSON.stringify(annotationData, null, 2);
-  const blob = new Blob([jsonData], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'all_annotations.json';
-  link.click();
-}
-
-// Initialize by loading problems
-loadProblems();
 </script>
 
 <style>
-  #annotation-container {
-    max-width: 800px;
-    margin: 0 auto;
-  }
-  .llm-reasoning {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin-bottom: 10px;
-    line-height: 1.6;
-  }
-  button {
-    margin-right: 10px;
-    margin-bottom: 5px;
-  }
-  .annotation {
-    padding: 2px 0;
-  }
-  .comment {
-    text-decoration: underline;
-    text-decoration-style: wavy;
-    text-decoration-color: #00FFFF;
-  }
   .problem-block {
     border-bottom: 1px solid #ccc;
     margin-bottom: 20px;
